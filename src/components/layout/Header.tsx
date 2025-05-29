@@ -18,10 +18,12 @@ import {
 } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
   BarChart3,
   CalendarCheck,
+  IndianRupee,
   LayoutDashboard,
   LogOut,
   Map,
@@ -40,6 +42,7 @@ const navLinks = [
   { href: "/route-playback", label: "Map", icon: Map },
   { href: "/tickets/create", label: "Tickets", icon: Ticket },
   { href: "/reports/travel", label: "Reports", icon: BarChart3 },
+  { href: "/expenses", label: "Expenses", icon: IndianRupee },
   { href: "/alerts", label: "Alerts", icon: AlertTriangle },
   { href: "/attendance/geofence", label: "My Day", icon: CalendarCheck },
 ];
@@ -78,16 +81,24 @@ export function Header() {
     label: string;
     icon: React.ElementType;
     onClick?: () => void;
-  }) => (
-    <Link
-      href={href}
-      onClick={onClick}
-      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-accent hover:text-accent-foreground"
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </Link>
-  );
+  }) => {
+    const isActive = pathname === href || pathname.startsWith(`${href}/`);
+    return (
+      <Link
+        href={href}
+        onClick={onClick}
+        className={cn(
+          "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-primary text-primary-foreground"
+            : "text-foreground/70 hover:bg-accent hover:text-accent-foreground"
+        )}
+      >
+        <Icon className="h-4 w-4" />
+        {label}
+      </Link>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

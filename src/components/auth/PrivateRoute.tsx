@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 
 interface PrivateRouteProps {
   children: React.ReactNode;

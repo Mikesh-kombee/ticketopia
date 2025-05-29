@@ -118,34 +118,26 @@ Design and generate a global `AppLayout` component in React that:
 
 Generate the React JSX and Tailwind CSS classes needed for this layout.
 
-# Travel Report & Expense Manager (Mobile Web)
+# Travel Expense Management Flow (Web)
 
-Create a mobile-optimized React component `TravelReports` that:
+## Web (Admin Dashboard)
 
-### Submission Form:
-- Allows users to submit travel expense reports with the following fields:
-  - **Vehicle Used**: dropdown list (car, bike, etc.)
-  - **Employee Name**: auto-filled or selectable
-  - **Travel Area**: text field or map picker
-  - **Expense Type**: dropdown (Fuel, Toll, Meals, Others)
-  - **Cost**: currency input field
-  - **Receipt Upload**: optional image/file input
+Create a responsive admin dashboard that:
+- Displays a table of all expense submissions with columns:
+  - User Name, Submission Date, Distance (km), Toll (₹), Vehicle Type, Total Cost, Status
+- Admin actions:
+  - Approve / Reject buttons
+  - Filter by date, user, or status
+  - View notes if available
+- Calculate total cost using a configurable per-km rate
 
-### Report List:
-- Displays submitted reports in card view (mobile-friendly)
-- Shows: employee, vehicle, area, expense type, cost, date, and status
-- Includes filter controls by:
-  - Travel area
-  - Employee
-  - Date range
+## Admin Cost Settings Form
 
-### Admin Actions:
-- Adds **Approve** and **Reject** buttons to each report (visible to admin roles)
-- Updates report status visually
+Create a form for Admin to define reimbursement rates:
+- Select User
+- Vehicle Type
+- Cost per KM (₹)
+- Store in mock DB or memory
+- Auto-apply this rate to new submissions
 
-### Functionality:
-- Persists report data in `localStorage` for offline access
-- Syncs to backend via `/api/reports` when online (mock endpoint)
-- Search and sort functionality by cost, date, or employee
-- Responsive layout for phones and tablets
-
+Ensure all views are responsive, mobile-friendly, and styled consistently.
