@@ -16,24 +16,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  mockExpenseSubmissions,
-  mockRateConfigs,
-} from "@/lib/mock/expense-data";
+import db from "@/lib/db.json";
 import {
   ExpenseStatus,
   ExpenseSubmission,
   RateConfig,
 } from "@/lib/types/expense";
 import { useState } from "react";
-import { CostSettingsForm } from "./CostSettingsForm";
+import { CostSettingsForm, type FormData } from "./CostSettingsForm";
 import { ExpenseTable } from "./ExpenseTable";
 
 export function ExpenseDashboard() {
   const [expenses, setExpenses] = useState<ExpenseSubmission[]>(
-    mockExpenseSubmissions
+    db.expenseSubmissions as ExpenseSubmission[]
   );
-  const [rateConfigs, setRateConfigs] = useState<RateConfig[]>(mockRateConfigs);
+  const [rateConfigs, setRateConfigs] = useState<RateConfig[]>(
+    db.rateConfigs as RateConfig[]
+  );
   const [notesDialog, setNotesDialog] = useState({ open: false, content: "" });
   const [filters, setFilters] = useState({
     startDate: "",
@@ -61,13 +60,14 @@ export function ExpenseDashboard() {
     setNotesDialog({ open: true, content: notes });
   };
 
-  const handleRateSubmit = (data: any) => {
+  const handleRateSubmit = (data: FormData) => {
     const newConfig: RateConfig = {
       id: `rate${rateConfigs.length + 1}`,
       userId: data.userId,
       userName:
-        mockExpenseSubmissions.find((exp) => exp.userId === data.userId)
-          ?.userName || "",
+        (db.users as { id: string; name: string }[]).find(
+          (usr) => usr.id === data.userId
+        )?.name || "",
       vehicleType: data.vehicleType,
       ratePerKm: data.ratePerKm,
     };

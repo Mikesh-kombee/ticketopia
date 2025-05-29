@@ -250,7 +250,7 @@ export default function TravelReportsPage() {
               <SelectValue placeholder="Filter by Travel Area" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Areas</SelectItem>
+              <SelectItem value={uniqueTravelAreas[0]}>All Areas</SelectItem>
               {uniqueTravelAreas.map((area) => (
                 <SelectItem key={area} value={area}>
                   {area}
@@ -263,7 +263,9 @@ export default function TravelReportsPage() {
               <SelectValue placeholder="Filter by Employee" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Employees</SelectItem>
+              <SelectItem value={uniqueEmployeeNames[0]}>
+                All Employees
+              </SelectItem>
               {uniqueEmployeeNames.map((name) => (
                 <SelectItem key={name} value={name}>
                   {name}

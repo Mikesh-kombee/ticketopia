@@ -383,9 +383,9 @@ export function TicketForm({ initialValues }: TicketFormProps) {
                       </FormDescription>
                     )}
                     <FormDescription>
-                      Enter address manually or click "Locate Me" to detect your
-                      current location. Location is needed for accurate ETA
-                      calculations.
+                      Enter address manually or click &quot;Locate Me&quot; to
+                      detect your current location. Location is needed for
+                      accurate ETA calculations.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

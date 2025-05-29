@@ -41,7 +41,7 @@ const navLinks = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/route-playback", label: "Map", icon: Map },
   { href: "/tickets/create", label: "Tickets", icon: Ticket },
-  { href: "/reports/travel", label: "Reports", icon: BarChart3 },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/expenses", label: "Expenses", icon: IndianRupee },
   { href: "/alerts", label: "Alerts", icon: AlertTriangle },
   { href: "/attendance/geofence", label: "My Day", icon: CalendarCheck },

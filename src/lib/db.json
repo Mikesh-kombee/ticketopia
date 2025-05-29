@@ -1,0 +1,597 @@
+{
+  "users": [
+    { "id": "user1", "name": "Rajesh Kumar" },
+    { "id": "user2", "name": "Priya Patel" },
+    { "id": "user3", "name": "Amit Shah" },
+    { "id": "user4", "name": "Meera Singh" }
+  ],
+  "expenseSubmissions": [
+    {
+      "id": "exp1",
+      "userId": "user1",
+      "userName": "Rajesh Kumar",
+      "submissionDate": "2024-03-15",
+      "distance": 45,
+      "toll": 100,
+      "vehicleType": "Two Wheeler",
+      "totalCost": 325,
+      "status": "Pending",
+      "notes": "Client visit to Diamond Market"
+    },
+    {
+      "id": "exp2",
+      "userId": "user2",
+      "userName": "Priya Patel",
+      "submissionDate": "2024-03-14",
+      "distance": 30,
+      "toll": 50,
+      "vehicleType": "Four Wheeler",
+      "totalCost": 450,
+      "status": "Approved"
+    },
+    {
+      "id": "exp3",
+      "userId": "user3",
+      "userName": "Amit Shah",
+      "submissionDate": "2024-03-13",
+      "distance": 20,
+      "toll": 0,
+      "vehicleType": "Public Transport",
+      "totalCost": 200,
+      "status": "Rejected",
+      "notes": "Incomplete documentation"
+    }
+  ],
+  "rateConfigs": [
+    {
+      "id": "rate1",
+      "userId": "user1",
+      "userName": "Rajesh Kumar",
+      "vehicleType": "Two Wheeler",
+      "ratePerKm": 5
+    },
+    {
+      "id": "rate2",
+      "userId": "user2",
+      "userName": "Priya Patel",
+      "vehicleType": "Four Wheeler",
+      "ratePerKm": 12
+    },
+    {
+      "id": "rate3",
+      "userId": "user3",
+      "userName": "Amit Shah",
+      "vehicleType": "Public Transport",
+      "ratePerKm": 8
+    }
+  ],
+  "defaultRates": {
+    "Two Wheeler": 5,
+    "Four Wheeler": 12,
+    "Public Transport": 8
+  },
+  "routeData": {
+    "eng1-2024-07-30": [
+      {
+        "lat": 21.1702,
+        "lng": 72.8311,
+        "timestamp": "2024-07-30T09:00:00Z",
+        "speed": 30
+      },
+      {
+        "lat": 21.1712,
+        "lng": 72.8321,
+        "timestamp": "2024-07-30T09:02:00Z",
+        "speed": 40
+      },
+      {
+        "lat": 21.1722,
+        "lng": 72.8331,
+        "timestamp": "2024-07-30T09:05:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1722,
+        "lng": 72.8331,
+        "timestamp": "2024-07-30T09:12:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1732,
+        "lng": 72.8341,
+        "timestamp": "2024-07-30T09:15:00Z",
+        "speed": 25
+      },
+      {
+        "lat": 21.1742,
+        "lng": 72.8361,
+        "timestamp": "2024-07-30T09:20:00Z",
+        "speed": 35
+      },
+      {
+        "lat": 21.1752,
+        "lng": 72.8381,
+        "timestamp": "2024-07-30T09:25:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1752,
+        "lng": 72.8381,
+        "timestamp": "2024-07-30T09:28:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1762,
+        "lng": 72.8401,
+        "timestamp": "2024-07-30T09:30:00Z",
+        "speed": 45
+      },
+      {
+        "lat": 21.1772,
+        "lng": 72.8421,
+        "timestamp": "2024-07-30T09:35:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1772,
+        "lng": 72.8421,
+        "timestamp": "2024-07-30T09:45:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.178,
+        "lng": 72.843,
+        "timestamp": "2024-07-30T09:47:00Z",
+        "speed": 20
+      }
+    ],
+    "eng1-2024-07-31": [
+      {
+        "lat": 21.178,
+        "lng": 72.843,
+        "timestamp": "2024-07-31T10:00:00Z",
+        "speed": 15
+      },
+      {
+        "lat": 21.179,
+        "lng": 72.844,
+        "timestamp": "2024-07-31T10:05:00Z",
+        "speed": 20
+      },
+      {
+        "lat": 21.179,
+        "lng": 72.844,
+        "timestamp": "2024-07-31T10:15:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.18,
+        "lng": 72.845,
+        "timestamp": "2024-07-31T10:20:00Z",
+        "speed": 30
+      }
+    ],
+    "eng2-2024-07-30": [
+      {
+        "lat": 21.16,
+        "lng": 72.82,
+        "timestamp": "2024-07-30T10:00:00Z",
+        "speed": 50
+      },
+      {
+        "lat": 21.1612,
+        "lng": 72.8223,
+        "timestamp": "2024-07-30T10:05:00Z",
+        "speed": 55
+      },
+      {
+        "lat": 21.1624,
+        "lng": 72.8246,
+        "timestamp": "2024-07-30T10:10:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1624,
+        "lng": 72.8246,
+        "timestamp": "2024-07-30T10:20:00Z",
+        "speed": 0
+      },
+      {
+        "lat": 21.1636,
+        "lng": 72.8269,
+        "timestamp": "2024-07-30T10:25:00Z",
+        "speed": 60
+      }
+    ]
+  },
+  "activeEngineers": [
+    {
+      "id": "eng1",
+      "name": "Alice Smith",
+      "status": "Active",
+      "avatar": "https://placehold.co/40x40.png?text=AS",
+      "currentTask": "Servicing Ticket #T1001"
+    },
+    {
+      "id": "eng2",
+      "name": "Bob Johnson",
+      "status": "On Route",
+      "avatar": "https://placehold.co/40x40.png?text=BJ",
+      "currentTask": "En route to Downtown"
+    },
+    {
+      "id": "eng3",
+      "name": "Charlie Brown",
+      "status": "On Break",
+      "avatar": "https://placehold.co/40x40.png?text=CB"
+    },
+    {
+      "id": "eng4",
+      "name": "Diana Prince",
+      "status": "Offline",
+      "avatar": "https://placehold.co/40x40.png?text=DP"
+    },
+    {
+      "id": "eng5",
+      "name": "Edward Nygma",
+      "status": "Active",
+      "avatar": "https://placehold.co/40x40.png?text=EN",
+      "currentTask": "Awaiting Assignment"
+    }
+  ],
+  "openTickets": [
+    {
+      "id": "T001",
+      "customerName": "ABC Corp",
+      "status": "Pending",
+      "priority": "High",
+      "assignedEngineerId": "1",
+      "issueType": "Plumbing",
+      "lastUpdate": "2023-12-15T10:30:00Z"
+    },
+    {
+      "id": "T002",
+      "customerName": "XYZ Ltd",
+      "status": "In Progress",
+      "priority": "Medium",
+      "assignedEngineerId": "2",
+      "issueType": "Electrical",
+      "lastUpdate": "2023-12-15T09:15:00Z"
+    },
+    {
+      "id": "T003",
+      "customerName": "DEF Inc",
+      "status": "Assigned",
+      "priority": "Urgent",
+      "assignedEngineerId": "3",
+      "issueType": "HVAC",
+      "lastUpdate": "2023-12-15T08:45:00Z"
+    },
+    {
+      "id": "T004",
+      "customerName": "GHI Co",
+      "status": "Pending",
+      "priority": "Low",
+      "assignedEngineerId": "4",
+      "issueType": "Plumbing",
+      "lastUpdate": "2023-12-15T07:30:00Z"
+    },
+    {
+      "id": "T005",
+      "customerName": "JKL Group",
+      "status": "In Progress",
+      "priority": "High",
+      "assignedEngineerId": "5",
+      "issueType": "Plumbing",
+      "lastUpdate": "2023-12-15T07:30:00Z"
+    }
+  ],
+  "routeLogs": [
+    {
+      "id": "R001",
+      "engineerName": "John Doe",
+      "date": "2023-12-15",
+      "distanceKm": 125.5,
+      "engineerId": "1",
+      "durationMinutes": 120,
+      "stops": 5,
+      "mapSnapshotUrl": "/images/routes/route-001.png"
+    },
+    {
+      "id": "R002",
+      "engineerName": "Jane Smith",
+      "date": "2023-12-15",
+      "distanceKm": 89.2,
+      "engineerId": "2",
+      "durationMinutes": 90,
+      "stops": 3,
+      "mapSnapshotUrl": "/images/routes/route-002.png"
+    },
+    {
+      "id": "R003",
+      "engineerName": "Mike Johnson",
+      "date": "2023-12-14",
+      "distanceKm": 156.8,
+      "engineerId": "3",
+      "durationMinutes": 180,
+      "stops": 7,
+      "mapSnapshotUrl": "/images/routes/route-003.png"
+    },
+    {
+      "id": "R004",
+      "engineerName": "Sarah Wilson",
+      "date": "2023-12-14",
+      "distanceKm": 203.4,
+      "engineerId": "4",
+      "durationMinutes": 240,
+      "stops": 9,
+      "mapSnapshotUrl": "/images/routes/route-004.png"
+    },
+    {
+      "id": "R005",
+      "engineerName": "David Brown",
+      "date": "2023-12-13",
+      "distanceKm": 78.9,
+      "engineerId": "5",
+      "durationMinutes": 75,
+      "stops": 4,
+      "mapSnapshotUrl": "/images/routes/route-005.png"
+    }
+  ],
+  "alerts": [
+    {
+      "id": "A001",
+      "type": "Speeding",
+      "engineerName": "John Doe",
+      "timestamp": "2023-12-15T10:30:00Z",
+      "severity": "high",
+      "status": "new",
+      "alertId": "A001"
+    },
+    {
+      "id": "A002",
+      "type": "Long Idle",
+      "engineerName": "Jane Smith",
+      "timestamp": "2023-12-15T09:15:00Z",
+      "severity": "medium",
+      "status": "reviewed",
+      "alertId": "A002"
+    },
+    {
+      "id": "A003",
+      "type": "Geofence Breach",
+      "engineerName": "Mike Johnson",
+      "timestamp": "2023-12-15T08:45:00Z",
+      "severity": "info",
+      "status": "dismissed",
+      "alertId": "A003"
+    },
+    {
+      "id": "A004",
+      "type": "Service Due",
+      "engineerName": "Sarah Wilson",
+      "timestamp": "2023-12-15T11:20:00Z",
+      "severity": "high",
+      "status": "new",
+      "alertId": "A004"
+    },
+    {
+      "id": "A005",
+      "type": "Unusual Activity",
+      "engineerName": "David Brown",
+      "timestamp": "2023-12-15T07:30:00Z",
+      "severity": "low",
+      "status": "reviewed",
+      "alertId": "A005"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "AT001",
+      "engineerName": "John Doe",
+      "checkInTime": "08:00",
+      "status": "Checked In",
+      "engineerId": "1",
+      "date": "2024-03-20",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+    },
+    {
+      "id": "AT002",
+      "engineerName": "Jane Smith",
+      "checkInTime": "08:15",
+      "status": "Checked In",
+      "engineerId": "2",
+      "date": "2024-03-20",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane"
+    },
+    {
+      "id": "AT003",
+      "engineerName": "Mike Johnson",
+      "checkInTime": "08:30",
+      "status": "On Leave",
+      "engineerId": "3",
+      "date": "2024-03-20",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike"
+    },
+    {
+      "id": "AT004",
+      "engineerName": "Sarah Wilson",
+      "checkInTime": "07:45",
+      "status": "Checked In",
+      "engineerId": "4",
+      "date": "2024-03-20",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+    },
+    {
+      "id": "AT005",
+      "engineerName": "David Brown",
+      "checkInTime": "09:00",
+      "status": "Late",
+      "engineerId": "5",
+      "date": "2024-03-20",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=David"
+    }
+  ],
+  "todaysAttendance": [
+    {
+      "id": "ATT4000",
+      "engineerId": "eng1",
+      "engineerName": "Alice Smith",
+      "checkInTime": "08:15",
+      "status": "Checked In",
+      "avatar": "https://placehold.co/40x40.png?text=AS",
+      "date": "2024-07-31"
+    },
+    {
+      "id": "ATT4001",
+      "engineerId": "eng2",
+      "engineerName": "Bob Johnson",
+      "checkInTime": "09:00",
+      "status": "Late",
+      "avatar": "https://placehold.co/40x40.png?text=BJ",
+      "date": "2024-07-31"
+    },
+    {
+      "id": "ATT4002",
+      "engineerId": "eng3",
+      "engineerName": "Charlie Brown",
+      "status": "On Leave",
+      "avatar": "https://placehold.co/40x40.png?text=CB",
+      "date": "2024-07-31"
+    }
+  ],
+  "dashboardOpenTickets": [
+    {
+      "id": "T1001",
+      "customerName": "John Doe",
+      "status": "Assigned",
+      "priority": "High",
+      "issueType": "Plumbing",
+      "assignedEngineerName": "Alice Smith",
+      "lastUpdate": "2024-07-31T10:00:00Z"
+    },
+    {
+      "id": "T1002",
+      "customerName": "Jane Smith",
+      "status": "In Progress",
+      "priority": "Urgent",
+      "issueType": "Electrical",
+      "assignedEngineerName": "Bob Johnson",
+      "lastUpdate": "2024-07-31T09:00:00Z"
+    },
+    {
+      "id": "T1003",
+      "customerName": "Mike Williams",
+      "status": "Pending",
+      "priority": "Medium",
+      "issueType": "HVAC",
+      "lastUpdate": "2024-07-31T10:30:00Z"
+    },
+    {
+      "id": "T1004",
+      "customerName": "Lisa Brown",
+      "status": "Assigned",
+      "priority": "Low",
+      "issueType": "Appliance Repair",
+      "assignedEngineerName": "Charlie Brown",
+      "lastUpdate": "2024-07-31T06:00:00Z"
+    },
+    {
+      "id": "T1005",
+      "customerName": "David Wilson",
+      "status": "Pending",
+      "priority": "Medium",
+      "issueType": "Other",
+      "lastUpdate": "2024-07-31T10:50:00Z"
+    }
+  ],
+  "circularGeoFences": {
+    "site-001": {
+      "id": "site-001",
+      "name": "Surat Municipal Corporation Office",
+      "center": { "lat": 21.1702, "lng": 72.8311 },
+      "radiusKm": 15
+    },
+    "site-002": {
+      "id": "site-002",
+      "name": "Diamond Market Hub",
+      "center": { "lat": 21.1825, "lng": 72.821 },
+      "radiusKm": 1.0
+    },
+    "user-current-location": {
+      "id": "user-current-location",
+      "name": "Dynamic User Zone",
+      "center": { "lat": 21.165, "lng": 72.84 },
+      "radiusKm": 0.2
+    }
+  },
+  "recentRouteLogs": [
+    {
+      "id": "R2000",
+      "engineerId": "eng1",
+      "engineerName": "Alice Smith",
+      "date": "2024-07-31",
+      "distanceKm": 55.5,
+      "durationMinutes": 150,
+      "mapSnapshotUrl": "https://placehold.co/100x60.png?text=Route+1",
+      "stops": 3
+    },
+    {
+      "id": "R2001",
+      "engineerId": "eng2",
+      "engineerName": "Bob Johnson",
+      "date": "2024-07-30",
+      "distanceKm": 70.2,
+      "durationMinutes": 120,
+      "mapSnapshotUrl": "https://placehold.co/100x60.png?text=Route+2",
+      "stops": 2
+    },
+    {
+      "id": "R2002",
+      "engineerId": "eng3",
+      "engineerName": "Charlie Brown",
+      "date": "2024-07-29",
+      "distanceKm": 30.0,
+      "durationMinutes": 90,
+      "mapSnapshotUrl": "https://placehold.co/100x60.png?text=Route+3",
+      "stops": 1
+    }
+  ],
+  "engineers": [
+    {
+      "id": "eng1",
+      "name": "Alice Smith",
+      "location": { "lat": 21.1702, "lng": 72.8311 },
+      "specialization": ["Plumbing", "HVAC"],
+      "avatar": "https://placehold.co/40x40.png?text=AS"
+    },
+    {
+      "id": "eng2",
+      "name": "Bob Johnson",
+      "location": { "lat": 21.175, "lng": 72.835 },
+      "specialization": ["Electrical"],
+      "avatar": "https://placehold.co/40x40.png?text=BJ"
+    },
+    {
+      "id": "eng3",
+      "name": "Charlie Brown",
+      "location": { "lat": 21.165, "lng": 72.828 },
+      "specialization": ["Appliance Repair", "HVAC"],
+      "avatar": "https://placehold.co/40x40.png?text=CB"
+    },
+    {
+      "id": "eng4",
+      "name": "Diana Prince",
+      "location": { "lat": 21.18, "lng": 72.84 },
+      "specialization": ["Plumbing"],
+      "avatar": "https://placehold.co/40x40.png?text=DP"
+    },
+    {
+      "id": "eng5",
+      "name": "Edward Nygma",
+      "location": { "lat": 21.16, "lng": 72.825 },
+      "specialization": ["Other", "Electrical"],
+      "avatar": "https://placehold.co/40x40.png?text=EN"
+    }
+  ]
+}

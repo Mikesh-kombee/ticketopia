@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockUsers } from "@/lib/mock/expense-data";
+import db from "@/lib/db.json";
 import { VehicleType } from "@/lib/types/expense";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
@@ -33,7 +33,7 @@ const formSchema = z.object({
   ratePerKm: z.number().min(0, "Rate must be positive"),
 });
 
-type FormData = z.infer<typeof formSchema>;
+export type FormData = z.infer<typeof formSchema>;
 
 export function CostSettingsForm({
   onSubmit,
@@ -89,11 +89,13 @@ export function CostSettingsForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {mockUsers.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
+                      {(db.users as { id: string; name: string }[]).map(
+                        (user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

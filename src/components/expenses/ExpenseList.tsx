@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ExpenseTable } from "./ExpenseTable";
-import { mockExpenseSubmissions } from "@/lib/mock/expense-data";
+import db from "@/lib/db.json";
 import { ExpenseSubmission, ExpenseStatus } from "@/lib/types/expense";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,7 +25,7 @@ import Link from "next/link";
 
 export function ExpenseList() {
   const [expenses, setExpenses] = useState<ExpenseSubmission[]>(
-    mockExpenseSubmissions
+    db.expenseSubmissions as ExpenseSubmission[]
   );
   const [notesDialog, setNotesDialog] = useState({ open: false, content: "" });
   const [filters, setFilters] = useState({

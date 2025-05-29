@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import db from "@/lib/db.json";
 import type {
   ActiveEngineerSummary,
   AlertSeverity,
@@ -25,7 +26,7 @@ import type {
   OpenTicketSummary,
   RecentRouteLogSummary,
   TicketPriority,
-  TicketStatus,
+  TicketStatus
 } from "@/lib/types";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import {
@@ -297,24 +298,26 @@ function DashboardHomePage() {
   // Mock data states with loading
   const [activeEngineers, setActiveEngineers] = useState<
     ActiveEngineerSummary[] | undefined
-  >();
+  >(db.activeEngineers as ActiveEngineerSummary[]);
   const [openTickets, setOpenTickets] = useState<
     OpenTicketSummary[] | undefined
-  >();
+  >(db.openTickets as OpenTicketSummary[]);
   const [routeLogs, setRouteLogs] = useState<
     RecentRouteLogSummary[] | undefined
-  >();
-  const [alerts, setAlerts] = useState<DashboardAlertSummary[] | undefined>();
+  >(db.routeLogs as RecentRouteLogSummary[]);
+  const [alerts, setAlerts] = useState<DashboardAlertSummary[] | undefined>(
+    db.alerts as DashboardAlertSummary[]
+  );
   const [attendance, setAttendance] = useState<
     AttendanceRecordSummary[] | undefined
-  >();
+  >(db.attendance as AttendanceRecordSummary[]);
 
   const [loadingStates, setLoadingStates] = useState({
-    engineers: true,
-    tickets: true,
-    routes: true,
-    alerts: true,
-    attendance: true,
+    engineers: false,
+    tickets: false,
+    routes: false,
+    alerts: false,
+    attendance: false,
   });
 
   // Sortable data hooks

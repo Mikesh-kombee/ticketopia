@@ -12,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import db from "@/lib/db.json"; // Import db.json
 import type {
   Alert,
   AlertSeverity,
   AlertStatus,
   AlertType,
   Coordinates,
-  Engineer,
 } from "@/lib/types";
 import { alertSeverities, alertStatuses, alertTypes } from "@/lib/types";
 import {
@@ -32,17 +32,17 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCard } from "./alert-card";
 import { ScrollArea } from "./ui/scroll-area";
 
-const mockEngineers: Pick<Engineer, "id" | "name">[] = [
-  { id: "eng1", name: "Alice Smith" },
-  { id: "eng2", name: "Bob Johnson" },
-  { id: "eng3", name: "Charlie Brown" },
-  { id: "eng4", name: "Diana Prince" },
-];
+// const mockEngineers: Pick<Engineer, "id" | "name">[] = [
+//   { id: "eng1", name: "Alice Smith" },
+//   { id: "eng2", name: "Bob Johnson" },
+//   { id: "eng3", name: "Charlie Brown" },
+//   { id: "eng4", name: "Diana Prince" },
+// ];
 
 // Function to generate a more realistic mock alert
 const generateMockAlert = (idSuffix: number): Alert => {
   const randomEngineer =
-    mockEngineers[Math.floor(Math.random() * mockEngineers.length)];
+    db.engineers[Math.floor(Math.random() * db.engineers.length)]; // Use db.engineers
   const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
   const randomSeverity =
     alertSeverities[Math.floor(Math.random() * alertSeverities.length)];
@@ -305,11 +305,11 @@ export function AlertsDashboard() {
           onValueChange={(value) => setFilterEngineer(value as string | "all")}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Filter by Engineer" />
+            <SelectValue placeholder="Filter by engineer..." />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Engineers</SelectItem>
-            {mockEngineers.map((eng) => (
+            {db.engineers.map((eng) => (
               <SelectItem key={eng.id} value={eng.id}>
                 {eng.name}
               </SelectItem>

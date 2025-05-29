@@ -31,7 +31,7 @@ const reportSchema = z.object({
     .refine((value) => !isNaN(parseFloat(value)) && parseFloat(value) > 0, {
       message: "Please enter a valid cost greater than 0",
     }),
-  receipt: z.instanceof(FileList).optional(),
+  receipt: z.any().optional(),
   notes: z.string().optional(),
 });
 
