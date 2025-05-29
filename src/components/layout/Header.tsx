@@ -1,5 +1,6 @@
 "use client";
 
+import logoImage from "@/assets/logo.webp";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,11 +34,10 @@ import {
   UserCircle,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
-import Image from "next/image";
-import logoImage from "@/assets/logo.webp";
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
