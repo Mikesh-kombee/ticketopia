@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useTicketStore } from "@/hooks/use-ticket-store";
 import { useToast } from "@/hooks/use-toast";
+import { useGoogleMapsApi } from "@/hooks/use-google-maps-api";
 import { createTicketAction, getEngineerEta } from "@/lib/actions";
 import { ticketFormSchema, type TicketFormSchema } from "@/lib/schema";
 import type { Coordinates, Engineer, IssueType, Ticket } from "@/lib/types";
@@ -59,20 +60,23 @@ const mockEngineers: Engineer[] = [
   {
     id: "eng1",
     name: "Alice Smith",
-    location: { lat: 34.0522, lng: -118.2437 },
+    location: { lat: 21.1702, lng: 72.8311 },
     specialization: ["Plumbing", "HVAC"],
+    avatar: "https://placehold.co/40x40.png?text=AS",
   },
   {
     id: "eng2",
     name: "Bob Johnson",
-    location: { lat: 34.055, lng: -118.245 },
+    location: { lat: 21.175, lng: 72.835 },
     specialization: ["Electrical"],
+    avatar: "https://placehold.co/40x40.png?text=BJ",
   },
   {
     id: "eng3",
     name: "Charlie Brown",
-    location: { lat: 34.05, lng: -118.24 },
+    location: { lat: 21.165, lng: 72.828 },
     specialization: ["Appliance Repair", "HVAC"],
+    avatar: "https://placehold.co/40x40.png?text=CB",
   },
 ];
 
@@ -93,6 +97,7 @@ export function TicketForm({ initialValues }: TicketFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { addTicket } = useTicketStore();
   const { toast } = useToast();
+  const { isLoaded: isGoogleMapsLoaded } = useGoogleMapsApi();
 
   const [currentPosition, setCurrentPosition] = useState<Coordinates | null>(
     null
@@ -117,14 +122,45 @@ export function TicketForm({ initialValues }: TicketFormProps) {
 
   const fetchAddressFromCoordinates = useCallback(
     async (coords: Coordinates) => {
-      // Mock reverse geocoding
-      form.setValue(
-        "address",
-        `Approx. address for ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
-      );
-      setLocationError(null);
+      try {
+        // Use Google Maps Geocoding API for reverse geocoding
+        if (isGoogleMapsLoaded && window.google && window.google.maps) {
+          const geocoder = new google.maps.Geocoder();
+          const response = await geocoder.geocode({
+            location: { lat: coords.lat, lng: coords.lng },
+          });
+
+          console.log("response", response);
+          if (response.results && response.results.length > 0) {
+            // Get the formatted address from the first result
+            const formattedAddress = response.results[0].formatted_address;
+            form.setValue("address", formattedAddress);
+          } else {
+            // Fallback if no results found
+            form.setValue(
+              "address",
+              `Location: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
+            );
+          }
+        } else {
+          // Fallback if Google Maps API is not loaded yet
+          form.setValue(
+            "address",
+            `Coordinates: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
+          );
+        }
+        setLocationError(null);
+      } catch (error) {
+        console.error("Geocoding error:", error);
+        // Fallback on error
+        form.setValue(
+          "address",
+          `Location: ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
+        );
+        setLocationError("Could not fetch address details");
+      }
     },
-    [form]
+    [form, isGoogleMapsLoaded]
   );
 
   const handleGeolocate = useCallback(() => {
@@ -193,28 +229,8 @@ export function TicketForm({ initialValues }: TicketFormProps) {
         photo: undefined,
         assignedEngineerId: initialValues.assignedEngineerId || undefined,
       });
-      // If initial values include address, try to geolocate or fetch ETAs based on it
-      // For simplicity, we'll rely on the existing geolocate logic triggered by handleGeolocate
-      if (initialValues.address) {
-        // Potentially trigger geocoding if address is provided but no coords
-        // Or if coords are provided, use them
-      } else {
-        handleGeolocate(); // Attempt to geolocate if no address is pre-filled
-      }
     }
-  }, [initialValues, form, handleGeolocate]);
-
-  useEffect(() => {
-    // If there are initial values, address might be pre-filled.
-    // Geolocation should still run to get coords for ETA if not provided.
-    if (!initialValues?.address) {
-      handleGeolocate();
-    } else if (initialValues.address && !currentPosition) {
-      // If address is prefilled, we'd ideally geocode it to get coordinates.
-      // For now, we'll still try to get current location for ETA.
-      handleGeolocate();
-    }
-  }, [handleGeolocate, initialValues, currentPosition]);
+  }, [initialValues, form]);
 
   useEffect(() => {
     if (currentPosition) {
@@ -255,8 +271,8 @@ export function TicketForm({ initialValues }: TicketFormProps) {
             : undefined,
       });
       if (!initialValues) {
-        // Only auto-geolocate if not coming from a pre-filled state
-        handleGeolocate();
+        // Removed automatic geolocation after form submission
+        // User can manually click "Locate Me" if needed for next ticket
       }
       setEngineersWithEta([]);
       if (currentPosition && !initialValues) fetchEngineersEta(currentPosition);
@@ -367,8 +383,9 @@ export function TicketForm({ initialValues }: TicketFormProps) {
                       </FormDescription>
                     )}
                     <FormDescription>
-                      Enter address manually or use Locate Me. Ensure address is
-                      accurate for ETA calculation.
+                      Enter address manually or click "Locate Me" to detect your
+                      current location. Location is needed for accurate ETA
+                      calculations.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

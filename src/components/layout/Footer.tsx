@@ -1,9 +1,6 @@
-
 "use client";
 
-import Link from 'next/link';
-
-const APP_VERSION = "v1.0.0"; // Placeholder for app version
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -13,16 +10,20 @@ export function Footer() {
           &copy; {new Date().getFullYear()} Ticketopia. All rights reserved.
         </div>
         <nav className="flex gap-4 sm:gap-6">
-          <Link href="#" className="text-sm hover:text-primary hover:underline underline-offset-4">
+          <Link
+            href="#"
+            className="text-sm hover:text-primary hover:underline underline-offset-4"
+          >
             Privacy Policy
           </Link>
-          <Link href="#" className="text-sm hover:text-primary hover:underline underline-offset-4">
+          <Link
+            href="#"
+            className="text-sm hover:text-primary hover:underline underline-offset-4"
+          >
             Terms of Service
           </Link>
         </nav>
-        <div className="text-sm">
-          {APP_VERSION}
-        </div>
+        <div className="text-sm text-muted-foreground">v1.0.0</div>
       </div>
     </footer>
   );

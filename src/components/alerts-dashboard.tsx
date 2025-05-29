@@ -49,7 +49,7 @@ const generateMockAlert = (idSuffix: number): Alert => {
   const randomStatus =
     alertStatuses[Math.floor(Math.random() * alertStatuses.length)];
 
-  const baseLocation: Coordinates = { lat: 34.0522, lng: -118.2437 }; // LA
+  const baseLocation: Coordinates = { lat: 21.1702, lng: 72.8311 }; // Surat
   const location: Coordinates = {
     lat: baseLocation.lat + (Math.random() - 0.5) * 0.1,
     lng: baseLocation.lng + (Math.random() - 0.5) * 0.1,

@@ -30,6 +30,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PrivateRoute } from "@/components/auth/PrivateRoute";
 import type {
   ActiveEngineerSummary,
   AlertSeverity,
@@ -202,47 +203,42 @@ function DashboardSection<T extends { id: string }>({
   onRefresh?: () => void;
 }) {
   return (
-    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <Icon className="h-6 w-6 mr-2 text-primary" />
-            <CardTitle className="text-xl">{title}</CardTitle>
-          </div>
+    <Card className="col-span-1">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <Icon className="h-4 w-4" />
+          {title}
+        </CardTitle>
           <div className="flex items-center gap-2">
             {onRefresh && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={onRefresh}
-                className="h-7 w-7"
+              className="h-8 w-8"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
             )}
             {viewAllLink && (
-              <Button variant="outline" size="sm" asChild>
+            <Button variant="ghost" size="icon" asChild className="h-8 w-8">
                 <Link href={viewAllLink}>
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  View All
+                <ExternalLink className="h-4 w-4" />
                 </Link>
               </Button>
             )}
-          </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-grow overflow-hidden p-0">
-        <ScrollArea className="h-[300px]">
-          {" "}
-          {/* Fixed height for scrollability */}
+      <CardContent>
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                {columns.map((col) => (
+                {columns.map((column) => (
                   <SortableHeader
-                    key={String(col.key)}
-                    columnKey={col.key}
-                    label={col.label}
+                    key={String(column.key)}
+                    columnKey={column.key}
+                    label={column.label}
                     sortConfig={sortConfig}
                     requestSort={requestSort}
                   />
@@ -250,71 +246,70 @@ function DashboardSection<T extends { id: string }>({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading &&
-                Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={`skel-${i}`}>
-                    {columns.map((col) => (
-                      <TableCell key={`skel-cell-${String(col.key)}-${i}`}>
-                        <Skeleton className="h-5 w-full" />
+              {isLoading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    {columns.map((column) => (
+                      <TableCell key={String(column.key)}>
+                        <Skeleton className="h-4 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              {!isLoading && data && data.length === 0 && (
+                ))
+              ) : data && data.length > 0 ? (
+                data.slice(0, 5).map((item) => (
+                  <TableRow
+                    key={item.id}
+                    className={
+                      onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                    }
+                    onClick={() => onRowClick?.(item)}
+                  >
+                    {columns.map((column) => (
+                      <TableCell key={String(column.key)}>
+                        {column.render
+                          ? column.render(item)
+                          : String(item[column.key] ?? "")}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
                     className="text-center text-muted-foreground"
                   >
-                    No data available.
+                    No data available
                   </TableCell>
                 </TableRow>
               )}
-              {!isLoading &&
-                data &&
-                data.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    onClick={onRowClick ? () => onRowClick(item) : undefined}
-                    className={
-                      onRowClick ? "cursor-pointer hover:bg-muted/30" : ""
-                    }
-                  >
-                    {columns.map((col) => (
-                      <TableCell key={String(col.key) + item.id}>
-                        {col.render
-                          ? col.render(item)
-                          : String(item[col.key] ?? "")}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
             </TableBody>
           </Table>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-export default function DashboardHomePage() {
+function DashboardHomePage() {
   const router = useRouter();
 
+  // Mock data states with loading
   const [activeEngineers, setActiveEngineers] = useState<
     ActiveEngineerSummary[] | undefined
-  >(undefined);
+  >();
   const [openTickets, setOpenTickets] = useState<
     OpenTicketSummary[] | undefined
-  >(undefined);
-  const [recentRoutes, setRecentRoutes] = useState<
+  >();
+  const [routeLogs, setRouteLogs] = useState<
     RecentRouteLogSummary[] | undefined
-  >(undefined);
-  const [unreadAlerts, setUnreadAlerts] = useState<
-    DashboardAlertSummary[] | undefined
-  >(undefined);
-  const [todaysAttendance, setTodaysAttendance] = useState<
+  >();
+  const [alerts, setAlerts] = useState<DashboardAlertSummary[] | undefined>();
+  const [attendance, setAttendance] = useState<
     AttendanceRecordSummary[] | undefined
-  >(undefined);
+  >();
 
   const [loadingStates, setLoadingStates] = useState({
     engineers: true,
@@ -324,358 +319,488 @@ export default function DashboardHomePage() {
     attendance: true,
   });
 
+  // Sortable data hooks
+  const engineersSort = useSortableData(activeEngineers, "name");
+  const ticketsSort = useSortableData(openTickets, "priority");
+  const routesSort = useSortableData(routeLogs, "date");
+  const alertsSort = useSortableData(alerts, "timestamp");
+  const attendanceSort = useSortableData(attendance, "checkInTime");
+
+  // Mock data fetch
   const fetchData = useCallback(async () => {
-    setLoadingStates((prev) => ({ ...prev, engineers: true }));
-    fetch("/api/dashboard/active-engineers")
-      .then((res) => res.json())
-      .then((data) => {
-        setActiveEngineers(data);
+    const mockDelay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    // Simulate API calls with different delays
+    setTimeout(async () => {
+      await mockDelay(500);
+      setActiveEngineers([
+        {
+          id: "1",
+          name: "John Doe",
+          status: "Active" as EngineerStatus,
+          currentLocation: "Downtown",
+        },
+        {
+          id: "2",
+          name: "Jane Smith",
+          status: "On Route" as EngineerStatus,
+          currentLocation: "Uptown",
+        },
+        {
+          id: "3",
+          name: "Mike Johnson",
+          status: "On Break" as EngineerStatus,
+          currentLocation: "Midtown",
+        },
+        {
+          id: "4",
+          name: "Sarah Wilson",
+          status: "Active" as EngineerStatus,
+          currentLocation: "Eastside",
+        },
+        {
+          id: "5",
+          name: "David Brown",
+          status: "Offline" as EngineerStatus,
+          currentLocation: "Westside",
+        },
+      ]);
         setLoadingStates((prev) => ({ ...prev, engineers: false }));
-      });
+    }, 100);
 
-    setLoadingStates((prev) => ({ ...prev, tickets: true }));
-    fetch("/api/dashboard/open-tickets")
-      .then((res) => res.json())
-      .then((data) => {
-        setOpenTickets(data);
+    setTimeout(async () => {
+      await mockDelay(700);
+      setOpenTickets([
+        {
+          id: "T001",
+          customer: "ABC Corp",
+          status: "Pending" as TicketStatus,
+          priority: "High" as TicketPriority,
+          assignedEngineerId: "1",
+        },
+        {
+          id: "T002",
+          customer: "XYZ Ltd",
+          status: "In Progress" as TicketStatus,
+          priority: "Medium" as TicketPriority,
+          assignedEngineerId: "2",
+        },
+        {
+          id: "T003",
+          customer: "DEF Inc",
+          status: "Assigned" as TicketStatus,
+          priority: "Urgent" as TicketPriority,
+          assignedEngineerId: "3",
+        },
+        {
+          id: "T004",
+          customer: "GHI Co",
+          status: "Pending" as TicketStatus,
+          priority: "Low" as TicketPriority,
+          assignedEngineerId: "4",
+        },
+        {
+          id: "T005",
+          customer: "JKL Group",
+          status: "In Progress" as TicketStatus,
+          priority: "High" as TicketPriority,
+          assignedEngineerId: "5",
+        },
+      ]);
         setLoadingStates((prev) => ({ ...prev, tickets: false }));
-      });
+    }, 300);
 
-    setLoadingStates((prev) => ({ ...prev, routes: true }));
-    fetch("/api/dashboard/recent-route-logs")
-      .then((res) => res.json())
-      .then((data) => {
-        setRecentRoutes(data);
-        setLoadingStates((prev) => ({ ...prev, routes: false }));
-      });
+    setTimeout(async () => {
+      await mockDelay(600);
+      setRouteLogs([
+        {
+          id: "R001",
+          engineerName: "John Doe",
+          date: "2023-12-15",
+          distance: 125.5,
+          engineerId: "1",
+        },
+        {
+          id: "R002",
+          engineerName: "Jane Smith",
+          date: "2023-12-15",
+          distance: 89.2,
+          engineerId: "2",
+        },
+        {
+          id: "R003",
+          engineerName: "Mike Johnson",
+          date: "2023-12-14",
+          distance: 156.8,
+          engineerId: "3",
+        },
+        {
+          id: "R004",
+          engineerName: "Sarah Wilson",
+          date: "2023-12-14",
+          distance: 203.4,
+          engineerId: "4",
+        },
+        {
+          id: "R005",
+          engineerName: "David Brown",
+          date: "2023-12-13",
+          distance: 78.9,
+          engineerId: "5",
+        },
+      ]);
+      setLoadingStates((prev) => ({ ...prev, routes: false }));
+    }, 200);
 
-    setLoadingStates((prev) => ({ ...prev, alerts: true }));
-    fetch("/api/dashboard/unread-alerts")
-      .then((res) => res.json())
-      .then((data) => {
-        setUnreadAlerts(data);
-        setLoadingStates((prev) => ({ ...prev, alerts: false }));
-      });
+    setTimeout(async () => {
+      await mockDelay(800);
+      setAlerts([
+        {
+          id: "A001",
+          type: "Speed Alert",
+          engineerName: "John Doe",
+          timestamp: "2023-12-15T10:30:00Z",
+          severity: "high" as AlertSeverity,
+          status: "new" as AlertStatus,
+          engineerId: "1",
+        },
+        {
+          id: "A002",
+          type: "Idle Alert",
+          engineerName: "Jane Smith",
+          timestamp: "2023-12-15T09:15:00Z",
+          severity: "medium" as AlertSeverity,
+          status: "reviewed" as AlertStatus,
+          engineerId: "2",
+        },
+        {
+          id: "A003",
+          type: "Route Deviation",
+          engineerName: "Mike Johnson",
+          timestamp: "2023-12-15T08:45:00Z",
+          severity: "info" as AlertSeverity,
+          status: "dismissed" as AlertStatus,
+          engineerId: "3",
+        },
+        {
+          id: "A004",
+          type: "Emergency",
+          engineerName: "Sarah Wilson",
+          timestamp: "2023-12-15T11:20:00Z",
+          severity: "high" as AlertSeverity,
+          status: "new" as AlertStatus,
+          engineerId: "4",
+        },
+        {
+          id: "A005",
+          type: "Check-in Late",
+          engineerName: "David Brown",
+          timestamp: "2023-12-15T07:30:00Z",
+          severity: "low" as AlertSeverity,
+          status: "reviewed" as AlertStatus,
+          engineerId: "5",
+        },
+      ]);
+      setLoadingStates((prev) => ({ ...prev, alerts: false }));
+    }, 400);
 
-    setLoadingStates((prev) => ({ ...prev, attendance: true }));
-    fetch("/api/dashboard/todays-attendance")
-      .then((res) => res.json())
-      .then((data) => {
-        setTodaysAttendance(data);
-        setLoadingStates((prev) => ({ ...prev, attendance: false }));
-      });
+    setTimeout(async () => {
+      await mockDelay(900);
+      setAttendance([
+        {
+          id: "AT001",
+          engineerName: "John Doe",
+          checkInTime: "08:00",
+          status: "Checked In" as AttendanceStatus,
+          engineerId: "1",
+        },
+        {
+          id: "AT002",
+          engineerName: "Jane Smith",
+          checkInTime: "08:15",
+          status: "Checked In" as AttendanceStatus,
+          engineerId: "2",
+        },
+        {
+          id: "AT003",
+          engineerName: "Mike Johnson",
+          checkInTime: "08:30",
+          status: "On Leave" as AttendanceStatus,
+          engineerId: "3",
+        },
+        {
+          id: "AT004",
+          engineerName: "Sarah Wilson",
+          checkInTime: "07:45",
+          status: "Checked In" as AttendanceStatus,
+          engineerId: "4",
+        },
+        {
+          id: "AT005",
+          engineerName: "David Brown",
+          checkInTime: "09:00",
+          status: "Late" as AttendanceStatus,
+          engineerId: "5",
+        },
+      ]);
+      setLoadingStates((prev) => ({ ...prev, attendance: false }));
+    }, 500);
   }, []);
 
   useEffect(() => {
     fetchData();
-    const intervalId = setInterval(fetchData, 60000); // Refresh data every 60 seconds
-    return () => clearInterval(intervalId);
   }, [fetchData]);
 
-  const {
-    items: sortedEngineers,
-    requestSort: requestSortEngineers,
-    sortConfig: sortConfigEngineers,
-  } = useSortableData(activeEngineers, "name");
-  const {
-    items: sortedTickets,
-    requestSort: requestSortTickets,
-    sortConfig: sortConfigTickets,
-  } = useSortableData(openTickets, "priority");
-  const {
-    items: sortedRoutes,
-    requestSort: requestSortRoutes,
-    sortConfig: sortConfigRoutes,
-  } = useSortableData(recentRoutes, "date");
-  const {
-    items: sortedAlerts,
-    requestSort: requestSortAlerts,
-    sortConfig: sortConfigAlerts,
-  } = useSortableData(unreadAlerts, "timestamp");
-  const {
-    items: sortedAttendance,
-    requestSort: requestSortAttendance,
-    sortConfig: sortConfigAttendance,
-  } = useSortableData(todaysAttendance, "engineerName");
+  const refreshData = useCallback(() => {
+    // Reset loading states
+    setLoadingStates({
+      engineers: true,
+      tickets: true,
+      routes: true,
+      alerts: true,
+      attendance: true,
+    });
 
-  const engineerColumns: {
-    key: keyof ActiveEngineerSummary;
-    label: string;
-    render?: (item: ActiveEngineerSummary) => React.ReactNode;
-  }[] = [
-    {
-      key: "name",
-      label: "Name",
-      render: (item) => (
-        <div className="flex items-center gap-2">
-          {item.avatar && (
-            <Image
-              data-ai-hint="person avatar"
-              src={item.avatar}
-              alt={item.name}
-              width={24}
-              height={24}
-              className="rounded-full"
-            />
-          )}
-          <span>{item.name}</span>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (item) => (
-        <Badge className={`${statusColors[item.status]} px-2 py-1 text-xs`}>
-          {item.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "currentTask",
-      label: "Current Task",
-      render: (item) => (
-        <span className="text-xs truncate">{item.currentTask || "N/A"}</span>
-      ),
-    },
-  ];
+    // Clear current data
+    setActiveEngineers(undefined);
+    setOpenTickets(undefined);
+    setRouteLogs(undefined);
+    setAlerts(undefined);
+    setAttendance(undefined);
 
-  const ticketColumns: {
-    key: keyof OpenTicketSummary;
-    label: string;
-    render?: (item: OpenTicketSummary) => React.ReactNode;
-  }[] = [
-    { key: "id", label: "Ticket ID" },
-    { key: "customerName", label: "Customer" },
-    {
-      key: "priority",
-      label: "Priority",
-      render: (item) => (
-        <Badge className={`${statusColors[item.priority]} px-2 py-1 text-xs`}>
-          {priorityIcons[item.priority]} {item.priority}
-        </Badge>
-      ),
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (item) => (
-        <Badge className={`${statusColors[item.status]} px-2 py-1 text-xs`}>
-          {item.status}
-        </Badge>
-      ),
-    },
-    { key: "issueType", label: "Issue Type" },
-    {
-      key: "lastUpdate",
-      label: "Last Update",
-      render: (item) =>
-        formatDistanceToNow(parseISO(item.lastUpdate), { addSuffix: true }),
-    },
-  ];
+    // Fetch new data
+    fetchData();
+  }, [fetchData]);
 
-  const routeLogColumns: {
-    key: keyof RecentRouteLogSummary;
-    label: string;
-    render?: (item: RecentRouteLogSummary) => React.ReactNode;
-  }[] = [
-    { key: "engineerName", label: "Engineer" },
-    {
-      key: "date",
-      label: "Date",
-      render: (item) =>
-        format(parseISO(item.date + "T00:00:00Z"), "MMM dd, yyyy"),
-    }, // Ensure date is parsed correctly
-    { key: "distanceKm", label: "Distance (km)" },
-    { key: "durationMinutes", label: "Duration (min)" },
-    { key: "stops", label: "Stops" },
-  ];
+  // Navigation handlers
+  const handleEngineerClick = (engineer: ActiveEngineerSummary) => {
+    router.push(`/live-map?engineer=${engineer.id}`);
+  };
 
-  const alertColumns: {
-    key: keyof DashboardAlertSummary;
-    label: string;
-    render?: (item: DashboardAlertSummary) => React.ReactNode;
-  }[] = [
-    { key: "type", label: "Type" },
-    { key: "engineerName", label: "Engineer" },
-    {
-      key: "severity",
-      label: "Severity",
-      render: (item) => (
-        <Badge className={`${statusColors[item.severity]} px-2 py-1 text-xs`}>
-          {item.severity}
-        </Badge>
-      ),
-    },
-    {
-      key: "timestamp",
-      label: "Timestamp",
-      render: (item) =>
-        formatDistanceToNow(parseISO(item.timestamp), { addSuffix: true }),
-    },
-  ];
+  const handleTicketClick = (ticket: OpenTicketSummary) => {
+    router.push(`/tickets/${ticket.id}`);
+  };
 
-  const attendanceColumns: {
-    key: keyof AttendanceRecordSummary;
-    label: string;
-    render?: (item: AttendanceRecordSummary) => React.ReactNode;
-  }[] = [
-    {
-      key: "engineerName",
-      label: "Engineer",
-      render: (item) => (
-        <div className="flex items-center gap-2">
-          {item.avatar && (
-            <Image
-              data-ai-hint="person avatar"
-              src={item.avatar}
-              alt={item.engineerName}
-              width={24}
-              height={24}
-              className="rounded-full"
-            />
-          )}
-          <span>{item.engineerName}</span>
-        </div>
-      ),
-    },
-    {
-      key: "checkInTime",
-      label: "Check-in",
-      render: (item) => item.checkInTime || "N/A",
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (item) => (
-        <Badge className={`${statusColors[item.status]} px-2 py-1 text-xs`}>
-          {item.status}
-        </Badge>
-      ),
-    },
-  ];
+  const handleRouteClick = (route: RecentRouteLogSummary) => {
+    router.push(`/routes?engineer=${route.engineerId}&date=${route.date}`);
+  };
+
+  const handleAlertClick = (alert: DashboardAlertSummary) => {
+    router.push(`/alerts?id=${alert.id}`);
+  };
+
+  const handleAttendanceClick = (attendance: AttendanceRecordSummary) => {
+    router.push(`/attendance?engineer=${attendance.engineerId}`);
+  };
 
   return (
-    <div className="flex-1 p-4 md:p-6 lg:p-8 container mx-auto">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h1 className="text-3xl font-bold text-primary">Dashboard Overview</h1>
-        <Button onClick={fetchData} variant="outline" size="sm">
-          <RefreshCw className="mr-2 h-4 w-4 animate-spin-slow" /> Refresh All
+    <PrivateRoute>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Overview of your field service operations
+            </p>
+          </div>
+          <Button onClick={refreshData} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh All
         </Button>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+          {/* Active Engineers */}
           <DashboardSection
             title="Active Engineers"
             icon={Users}
-            data={sortedEngineers}
-            columns={engineerColumns}
-            sortConfig={sortConfigEngineers}
-            requestSort={requestSortEngineers}
+            data={engineersSort.items}
+            sortConfig={engineersSort.sortConfig}
+            requestSort={engineersSort.requestSort}
+            onRowClick={handleEngineerClick}
             isLoading={loadingStates.engineers}
-            onRowClick={() => router.push(`/team`)}
-            viewAllLink="/team"
+            viewAllLink="/live-map"
             onRefresh={() => {
-              setLoadingStates((p) => ({ ...p, engineers: true }));
-              fetch("/api/dashboard/active-engineers")
-                .then((res) => res.json())
-                .then((data) => {
-                  setActiveEngineers(data);
-                  setLoadingStates((p) => ({ ...p, engineers: false }));
-                });
+              setLoadingStates((prev) => ({ ...prev, engineers: true }));
+              setTimeout(() => {
+                fetchData();
+              }, 100);
             }}
+            columns={[
+              { key: "name", label: "Name" },
+              {
+                key: "status",
+                label: "Status",
+                render: (engineer) => (
+                  <Badge
+                    variant="secondary"
+                    className={statusColors[engineer.status]}
+                  >
+                    {engineer.status}
+                  </Badge>
+                ),
+              },
+              { key: "currentLocation", label: "Location" },
+            ]}
           />
-        </div>
-        <div className="lg:col-span-2">
+
+          {/* Open Tickets */}
           <DashboardSection
             title="Open Tickets"
             icon={Ticket}
-            data={sortedTickets}
-            columns={ticketColumns}
-            sortConfig={sortConfigTickets}
-            requestSort={requestSortTickets}
+            data={ticketsSort.items}
+            sortConfig={ticketsSort.sortConfig}
+            requestSort={ticketsSort.requestSort}
+            onRowClick={handleTicketClick}
             isLoading={loadingStates.tickets}
-            onRowClick={() => router.push(`/tickets/create`)}
-            viewAllLink="/tickets/create"
+            viewAllLink="/tickets"
             onRefresh={() => {
-              setLoadingStates((p) => ({ ...p, tickets: true }));
-              fetch("/api/dashboard/open-tickets")
-                .then((res) => res.json())
-                .then((data) => {
-                  setOpenTickets(data);
-                  setLoadingStates((p) => ({ ...p, tickets: false }));
-                });
+              setLoadingStates((prev) => ({ ...prev, tickets: true }));
+              setTimeout(() => {
+                fetchData();
+              }, 100);
             }}
+            columns={[
+              { key: "id", label: "Ticket ID" },
+              { key: "customer", label: "Customer" },
+              {
+                key: "status",
+                label: "Status",
+                render: (ticket) => (
+                  <Badge
+                    variant="secondary"
+                    className={statusColors[ticket.status]}
+                  >
+                    {ticket.status}
+                  </Badge>
+                ),
+              },
+              {
+                key: "priority",
+                label: "Priority",
+                render: (ticket) => (
+                  <Badge
+                    variant="secondary"
+                    className={statusColors[ticket.priority]}
+                  >
+                    {priorityIcons[ticket.priority]} {ticket.priority}
+                  </Badge>
+                ),
+              },
+            ]}
           />
-        </div>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3 mt-6">
+          {/* Recent Route Logs */}
         <DashboardSection
           title="Recent Route Logs"
           icon={Route}
-          data={sortedRoutes}
-          columns={routeLogColumns}
-          sortConfig={sortConfigRoutes}
-          requestSort={requestSortRoutes}
+            data={routesSort.items}
+            sortConfig={routesSort.sortConfig}
+            requestSort={routesSort.requestSort}
+            onRowClick={handleRouteClick}
           isLoading={loadingStates.routes}
-          onRowClick={(item) =>
-            router.push(
-              `/route-playback?engineerId=${item.engineerId}&date=${item.date}`
-            )
-          }
-          viewAllLink="/route-playback"
+            viewAllLink="/routes"
           onRefresh={() => {
-            setLoadingStates((p) => ({ ...p, routes: true }));
-            fetch("/api/dashboard/recent-route-logs")
-              .then((res) => res.json())
-              .then((data) => {
-                setRecentRoutes(data);
-                setLoadingStates((p) => ({ ...p, routes: false }));
-              });
-          }}
-        />
+              setLoadingStates((prev) => ({ ...prev, routes: true }));
+              setTimeout(() => {
+                fetchData();
+              }, 100);
+            }}
+            columns={[
+              { key: "engineerName", label: "Engineer" },
+              {
+                key: "date",
+                label: "Date",
+                render: (route) => format(parseISO(route.date), "MMM dd"),
+              },
+              {
+                key: "distance",
+                label: "Distance (km)",
+                render: (route) => `${route.distance.toFixed(1)} km`,
+              },
+            ]}
+          />
+
+          {/* Unread Alerts */}
         <DashboardSection
           title="Unread Alerts"
           icon={AlertTriangle}
-          data={sortedAlerts}
-          columns={alertColumns}
-          sortConfig={sortConfigAlerts}
-          requestSort={requestSortAlerts}
+            data={alertsSort.items}
+            sortConfig={alertsSort.sortConfig}
+            requestSort={alertsSort.requestSort}
+            onRowClick={handleAlertClick}
           isLoading={loadingStates.alerts}
-          onRowClick={(item) => router.push(`/alerts?alertId=${item.alertId}`)}
           viewAllLink="/alerts"
           onRefresh={() => {
-            setLoadingStates((p) => ({ ...p, alerts: true }));
-            fetch("/api/dashboard/unread-alerts")
-              .then((res) => res.json())
-              .then((data) => {
-                setUnreadAlerts(data);
-                setLoadingStates((p) => ({ ...p, alerts: false }));
-              });
-          }}
-        />
+              setLoadingStates((prev) => ({ ...prev, alerts: true }));
+              setTimeout(() => {
+                fetchData();
+              }, 100);
+            }}
+            columns={[
+              { key: "type", label: "Alert Type" },
+              { key: "engineerName", label: "Engineer" },
+              {
+                key: "timestamp",
+                label: "Time",
+                render: (alert) =>
+                  formatDistanceToNow(parseISO(alert.timestamp), {
+                    addSuffix: true,
+                  }),
+              },
+              {
+                key: "severity",
+                label: "Severity",
+                render: (alert) => (
+                  <Badge
+                    variant="secondary"
+                    className={statusColors[alert.severity]}
+                  >
+                    {alert.severity}
+                  </Badge>
+                ),
+              },
+            ]}
+          />
+
+          {/* Today's Attendance */}
         <DashboardSection
           title="Today's Attendance"
           icon={CalendarCheck}
-          data={sortedAttendance}
-          columns={attendanceColumns}
-          sortConfig={sortConfigAttendance}
-          requestSort={requestSortAttendance}
+            data={attendanceSort.items}
+            sortConfig={attendanceSort.sortConfig}
+            requestSort={attendanceSort.requestSort}
+            onRowClick={handleAttendanceClick}
           isLoading={loadingStates.attendance}
-          onRowClick={() => router.push(`/attendance/geofence`)}
-          viewAllLink="/attendance/geofence"
+            viewAllLink="/attendance"
           onRefresh={() => {
-            setLoadingStates((p) => ({ ...p, attendance: true }));
-            fetch("/api/dashboard/todays-attendance")
-              .then((res) => res.json())
-              .then((data) => {
-                setTodaysAttendance(data);
-                setLoadingStates((p) => ({ ...p, attendance: false }));
-              });
-          }}
+              setLoadingStates((prev) => ({ ...prev, attendance: true }));
+              setTimeout(() => {
+                fetchData();
+              }, 100);
+            }}
+            columns={[
+              { key: "engineerName", label: "Engineer" },
+              { key: "checkInTime", label: "Check-in Time" },
+              {
+                key: "status",
+                label: "Status",
+                render: (attendance) => (
+                  <Badge
+                    variant="secondary"
+                    className={statusColors[attendance.status]}
+                  >
+                    {attendance.status}
+                  </Badge>
+                ),
+              },
+            ]}
         />
       </div>
     </div>
+    </PrivateRoute>
   );
 }
+
+export default DashboardHomePage;

@@ -5,21 +5,21 @@ import { NextResponse } from "next/server";
 const mockCircularGeoFences: Record<string, GeoFenceSite> = {
   "site-001": {
     id: "site-001",
-    name: "Downtown Office HQ",
-    center: { lat: 34.0522, lng: -118.2437 }, // LA City Hall approx
-    radiusKm: 0.5, // 500 meters radius
+    name: "Surat Municipal Corporation Office",
+    center: { lat: 21.1702, lng: 72.8311 }, // Surat city center
+    radiusKm: 15, // 15 km radius
   },
   "site-002": {
     id: "site-002",
-    name: "Warehouse District Hub",
-    center: { lat: 34.0385, lng: -118.235 },
+    name: "Diamond Market Hub",
+    center: { lat: 21.1825, lng: 72.821 },
     radiusKm: 1.0, // 1 km radius
   },
   "user-current-location": {
     // Example for a geofence dynamically set around a user
     id: "user-current-location",
     name: "Dynamic User Zone",
-    center: { lat: 34.05, lng: -118.25 }, // This would be set dynamically
+    center: { lat: 21.165, lng: 72.84 }, // This would be set dynamically
     radiusKm: 0.2, // 200 meters radius
   },
 };

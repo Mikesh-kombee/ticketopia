@@ -187,11 +187,57 @@ export default function RoutePlaybackPage() {
 
   useEffect(() => {
     if (isMapsApiLoaded && mapRef.current && !mapInstanceRef.current) {
-      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 34.0522, lng: -118.2437 }, // Default to LA
-        zoom: 12,
-        mapTypeControl: false,
-        streetViewControl: false,
+      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+        zoom: 13,
+        center: { lat: 21.1702, lng: 72.8311 }, // Default to Surat
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        styles: [
+          {
+            featureType: "all",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "landscape",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
+          },
+          {
+            featureType: "landscape.man_made",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#dcdcdc" }],
+          },
+          {
+            featureType: "landscape.natural",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#ececec" }],
+          },
+          {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
+          },
+          {
+            featureType: "road.highway",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#c9c9c9" }],
+          },
+          {
+            featureType: "road.arterial",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#e5e5e5" }],
+          },
+          {
+            featureType: "road.local",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
+          },
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#c9c9c9" }],
+          },
+        ],
       });
     }
     // Cleanup map instance on unmount? Not typical for single page app but can be done.
@@ -208,7 +254,7 @@ export default function RoutePlaybackPage() {
     clearMapObjects(); // Clear previous drawing before new one
 
     const map = mapInstanceRef.current;
-    const bounds = new window.google.maps.LatLngBounds();
+    const bounds = new google.maps.LatLngBounds();
 
     // Draw heatmap polyline segments
     for (let i = 0; i < routeData.length - 1; i++) {
@@ -221,7 +267,7 @@ export default function RoutePlaybackPage() {
       const avgSpeed = (p1.speed + p2.speed) / 2;
       const color = avgSpeed < IDLE_SPEED_THRESHOLD_KMH ? "#FF0000" : "#00FF00"; // Red for idle, Green for moving
 
-      const polyline = new window.google.maps.Polyline({
+      const polyline = new google.maps.Polyline({
         path: pathSegment,
         geodesic: true,
         strokeColor: color,
@@ -235,7 +281,7 @@ export default function RoutePlaybackPage() {
 
     // Add stop markers
     stops.forEach((stop) => {
-      const marker = new window.google.maps.Marker({
+      const marker = new google.maps.Marker({
         position: { lat: stop.lat, lng: stop.lng },
         map: map,
         label: stop.stopNumber?.toString() || "S",
@@ -249,11 +295,11 @@ export default function RoutePlaybackPage() {
 
     // Initialize moving marker
     if (routeData.length > 0) {
-      movingMarkerRef.current = new window.google.maps.Marker({
+      movingMarkerRef.current = new google.maps.Marker({
         position: { lat: routeData[0].lat, lng: routeData[0].lng },
         map: map,
         icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
+          path: google.maps.SymbolPath.CIRCLE,
           scale: 8,
           fillColor: "#4285F4", // Blue
           fillOpacity: 1,
@@ -269,8 +315,8 @@ export default function RoutePlaybackPage() {
       map.fitBounds(bounds);
     } else if (routeData.length === 0 && mapRef.current) {
       // No data, reset view
-      map.setCenter({ lat: 34.0522, lng: -118.2437 });
-      map.setZoom(12);
+      map.setCenter({ lat: 21.1702, lng: 72.8311 });
+      map.setZoom(13);
     }
   }, [isMapsApiLoaded, routeData, stops, clearMapObjects]);
 
@@ -354,9 +400,9 @@ export default function RoutePlaybackPage() {
         const newLat = p1.lat + (p2.lat - p1.lat) * fraction;
         const newLng = p1.lng + (p2.lng - p1.lng) * fraction;
 
-        if (window.google && window.google.maps) {
+        if (google && google.maps) {
           // Check if google.maps is available
-          const newPosition = new window.google.maps.LatLng(newLat, newLng);
+          const newPosition = new google.maps.LatLng(newLat, newLng);
           marker.setPosition(newPosition);
 
           // Optionally pan map to keep marker in view
@@ -413,15 +459,13 @@ export default function RoutePlaybackPage() {
     if (
       routeData.length < 2 ||
       !isMapsApiLoaded ||
-      !window.google ||
-      !window.google.maps ||
-      !window.google.maps.geometry
+      !google ||
+      !google.maps ||
+      !google.maps.geometry
     )
       return 0;
-    const path = routeData.map(
-      (p) => new window.google.maps.LatLng(p.lat, p.lng)
-    );
-    return window.google.maps.geometry.spherical.computeLength(path) / 1000;
+    const path = routeData.map((p) => new google.maps.LatLng(p.lat, p.lng));
+    return google.maps.geometry.spherical.computeLength(path) / 1000;
   }, [routeData, isMapsApiLoaded]); // Added isMapsApiLoaded dependency
 
   const totalDuration = useMemo(() => {

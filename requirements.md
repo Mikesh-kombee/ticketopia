@@ -1,3 +1,30 @@
+# Mock Authentication Flow (Web)
+
+Create a React-based mock authentication system that includes:
+
+1. **Login Page**:
+   - Email and password fields using React Hook Form
+   - Form validation using Zod
+   - Hardcoded valid credentials or call to a mock API
+   - "Remember me" checkbox (optional)
+   - On success: store user object in `localStorage` and redirect to `/dashboard`
+   - On failure: show error message
+
+2. **Auth Context**:
+   - Implement `useAuth()` hook to manage:
+     - `user`, `login()`, `logout()`, `isAuthenticated`
+   - Store session in `localStorage` and hydrate on page load
+
+3. **Protected Routes**:
+   - Create a `PrivateRoute` component or wrapper
+   - Redirect unauthenticated users to `/login`
+   - Show a loading spinner while checking auth state
+
+4. **Logout Functionality**:
+   - Clear session from `localStorage`
+   - Redirect to `/login`
+
+
 # Home Dashboard Module
 
 Design a `DashboardHome` React component that:
@@ -90,3 +117,35 @@ Design and generate a global `AppLayout` component in React that:
 - Ensure header and footer adapt to all screen sizes
 
 Generate the React JSX and Tailwind CSS classes needed for this layout.
+
+# Travel Report & Expense Manager (Mobile Web)
+
+Create a mobile-optimized React component `TravelReports` that:
+
+### Submission Form:
+- Allows users to submit travel expense reports with the following fields:
+  - **Vehicle Used**: dropdown list (car, bike, etc.)
+  - **Employee Name**: auto-filled or selectable
+  - **Travel Area**: text field or map picker
+  - **Expense Type**: dropdown (Fuel, Toll, Meals, Others)
+  - **Cost**: currency input field
+  - **Receipt Upload**: optional image/file input
+
+### Report List:
+- Displays submitted reports in card view (mobile-friendly)
+- Shows: employee, vehicle, area, expense type, cost, date, and status
+- Includes filter controls by:
+  - Travel area
+  - Employee
+  - Date range
+
+### Admin Actions:
+- Adds **Approve** and **Reject** buttons to each report (visible to admin roles)
+- Updates report status visually
+
+### Functionality:
+- Persists report data in `localStorage` for offline access
+- Syncs to backend via `/api/reports` when online (mock endpoint)
+- Search and sort functionality by cost, date, or employee
+- Responsive layout for phones and tablets
+

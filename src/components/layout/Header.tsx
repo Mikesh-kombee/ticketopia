@@ -1,11 +1,7 @@
-
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,32 +9,76 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LayoutDashboard, Map, Ticket, BarChart3, AlertTriangle, CalendarCheck, Menu, UserCircle, Settings, LogOut, X } from 'lucide-react';
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertTriangle,
+  BarChart3,
+  CalendarCheck,
+  LayoutDashboard,
+  LogOut,
+  Map,
+  Menu,
+  Settings,
+  Ticket,
+  UserCircle,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React, { useState } from "react";
 
 const navLinks = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/route-playback', label: 'Map', icon: Map },
-  { href: '/tickets/create', label: 'Tickets', icon: Ticket },
-  { href: '#reports', label: 'Reports', icon: BarChart3 }, // Placeholder
-  { href: '/alerts', label: 'Alerts', icon: AlertTriangle },
-  { href: '/attendance/geofence', label: 'My Day', icon: CalendarCheck },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/route-playback", label: "Map", icon: Map },
+  { href: "/tickets/create", label: "Tickets", icon: Ticket },
+  { href: "/reports/travel", label: "Reports", icon: BarChart3 },
+  { href: "/alerts", label: "Alerts", icon: AlertTriangle },
+  { href: "/attendance/geofence", label: "My Day", icon: CalendarCheck },
 ];
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
+  const { user, logout, isAuthenticated } = useAuth();
+
+  // Don't show header on login page
+  if (pathname === "/login") {
+    return null;
+  }
+
+  // Don't show header if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const handleLogout = () => {
-    // Implement actual logout logic here
-    toast({ title: "Logged Out", description: "You have been successfully logged out." });
-    router.push('/'); // Redirect to home or login page
+    logout();
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
   };
 
-  const NavLinkItem = ({ href, label, icon: Icon, onClick }: { href: string; label: string; icon: React.ElementType; onClick?: () => void }) => (
+  const NavLinkItem = ({
+    href,
+    label,
+    icon: Icon,
+    onClick,
+  }: {
+    href: string;
+    label: string;
+    icon: React.ElementType;
+    onClick?: () => void;
+  }) => (
     <Link
       href={href}
       onClick={onClick}
@@ -75,8 +115,14 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png?text=U" data-ai-hint="user avatar" alt="User Avatar" />
-                  <AvatarFallback><UserCircle className="h-5 w-5" /></AvatarFallback>
+                  <AvatarImage src="" alt={user?.name || "User"} />
+                  <AvatarFallback>
+                    {user?.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase() || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
@@ -84,9 +130,11 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Demo User</p>
+                  <p className="text-sm font-medium leading-none">
+                    {user?.name || "User"}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    user@example.com
+                    {user?.email || "user@example.com"}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -102,7 +150,10 @@ export function Header() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer">
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="flex items-center gap-2 cursor-pointer"
+              >
                 <LogOut className="h-4 w-4" /> Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -119,15 +170,21 @@ export function Header() {
             <SheetContent side="right" className="w-full max-w-xs p-0">
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-between border-b p-4">
-                  <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <Ticket className="h-6 w-6 text-primary" />
-                    <span className="text-lg font-bold text-primary">Ticketopia</span>
+                    <span className="text-lg font-bold text-primary">
+                      Ticketopia
+                    </span>
                   </Link>
                   <SheetClose asChild>
-                     <Button variant="ghost" size="icon">
-                        <X className="h-5 w-5" />
-                        <span className="sr-only">Close menu</span>
-                      </Button>
+                    <Button variant="ghost" size="icon">
+                      <X className="h-5 w-5" />
+                      <span className="sr-only">Close menu</span>
+                    </Button>
                   </SheetClose>
                 </div>
                 <nav className="flex flex-1 flex-col gap-2 p-4">

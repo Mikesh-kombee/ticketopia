@@ -94,6 +94,36 @@ export async function getEngineerEta(
     return { etaMinutes: result.etaMinutes, explanation: result.explanation };
   } catch (error) {
     console.error("Error calculating ETA:", error);
-    return { error: "Failed to calculate ETA." };
+
+    // Handle specific API errors
+    if (error && typeof error === "object" && "status" in error) {
+      const apiError = error as { status: number; message?: string };
+
+      if (apiError.status === 429) {
+        return {
+          error:
+            "AI service is temporarily busy due to high demand. The ETA calculation will be available shortly. Please try again in a moment.",
+        };
+      }
+
+      if (apiError.status === 401) {
+        return {
+          error: "AI service authentication issue. Please contact support.",
+        };
+      }
+
+      if (apiError.status >= 500) {
+        return {
+          error:
+            "AI service is temporarily unavailable. Please try again later.",
+        };
+      }
+    }
+
+    // Generic fallback error
+    return {
+      error:
+        "ETA calculation is temporarily unavailable. The ticket has been created successfully.",
+    };
   }
 }
