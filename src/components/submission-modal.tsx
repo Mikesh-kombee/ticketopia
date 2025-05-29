@@ -1,10 +1,7 @@
-
 "use client";
 
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -12,20 +9,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, PlusCircle, LayoutDashboard } from "lucide-react";
+import { CheckCircle2, LayoutDashboard, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface SubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // onGoToDashboard: () => void; // No longer needed as we directly navigate
-  // onCreateAnother: () => void; // No longer needed as we directly navigate
 }
 
-export function SubmissionModal({
-  isOpen,
-  onClose,
-}: SubmissionModalProps) {
+export function SubmissionModal({ isOpen, onClose }: SubmissionModalProps) {
   const router = useRouter();
 
   const handleGoToDashboard = () => {
@@ -37,7 +29,7 @@ export function SubmissionModal({
     onClose(); // Close the modal first
     // Assuming the form reset logic is handled by the parent component or this action implies a page reload/navigation
     router.push("/tickets/create"); // Navigate to create ticket page
-     // If the form needs to be reset specifically, the parent component should handle it on modal close or navigation.
+    // If the form needs to be reset specifically, the parent component should handle it on modal close or navigation.
   };
 
   return (
@@ -47,7 +39,9 @@ export function SubmissionModal({
           <div className="flex justify-center mb-4">
             <CheckCircle2 className="h-16 w-16 text-green-500" />
           </div>
-          <AlertDialogTitle className="text-center text-2xl">Ticket Created Successfully!</AlertDialogTitle>
+          <AlertDialogTitle className="text-center text-2xl">
+            Ticket Created Successfully!
+          </AlertDialogTitle>
           <AlertDialogDescription className="text-center">
             Your new ticket has been logged in the system.
           </AlertDialogDescription>

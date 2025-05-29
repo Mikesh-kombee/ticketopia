@@ -2,10 +2,10 @@
 import { AlertsDashboard } from "@/components/alerts-dashboard";
 import { Metadata } from "next";
 
-// export const metadata: Metadata = { // Metadata cannot be exported from client component pages directly
-//   title: "Alerts Dashboard - Ticketopia",
-//   description: "Monitor real-time operational alerts.",
-// };
+export const metadata: Metadata = {
+  title: "Alerts Dashboard - Ticketopia",
+  description: "Monitor real-time operational alerts.",
+};
 
 export default function AlertsPage() {
   return (

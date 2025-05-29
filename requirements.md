@@ -23,9 +23,11 @@ Create a React component `TicketForm` that:
 - Implements Places Autocomplete for manual edits
 - Includes fields: Customer Name, Issue Type dropdown, Notes textarea, Photo upload placeholder
 - Provides a dropdown of available engineers, sorted by proximity with ETA badges
+- Supports initiating ticket creation via incoming call event (simulate this)
 - Validates inputs using React Hook Form and Zod
 - On submit, posts to `/api/tickets` and shows a modal with “Create Another Ticket” / “Go to Dashboard” options
 - Renders a side `TicketHistoryPanel` showing the last 5 tickets with status and timestamps, refreshable via a button
+- Stores all ticket data locally and syncs when online
 
 # Route History Playback (Web)
 
@@ -63,6 +65,7 @@ Implement a React component `GeoFenceCheckIn` that:
 - Automatically checks out when the user exits the geofence, updating the summary
 - Persists logs in IndexedDB and syncs to `/api/attendance` when back online
 - Provides a UI to search and display nearby engineers within the configured radius
+- Stores all client-side actions related to attendance and selection locally and syncs with backend
 
 # Layout & Responsiveness (Web)
 
@@ -86,4 +89,4 @@ Design and generate a global `AppLayout` component in React that:
 - Use CSS Flexbox or Tailwind utility classes for spacing
 - Ensure header and footer adapt to all screen sizes
 
-Generate the React JSX and Tailwind CSS classes needed for this layout.```
+Generate the React JSX and Tailwind CSS classes needed for this layout.

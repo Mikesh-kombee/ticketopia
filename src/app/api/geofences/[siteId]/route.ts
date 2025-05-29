@@ -25,13 +25,13 @@ const mockCircularGeoFences: Record<string, GeoFenceSite> = {
 };
 
 type RouteParams = {
-  params: {
+  params: Promise<{
     siteId: string;
-  };
+  }>;
 };
 
 export async function GET(request: Request, { params }: RouteParams) {
-  const { siteId } = params;
+  const { siteId } = await params;
 
   if (!siteId) {
     return NextResponse.json({ error: "Site ID is required" }, { status: 400 });

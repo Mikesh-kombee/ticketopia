@@ -1,14 +1,35 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useTicketStore } from "@/hooks/use-ticket-store";
 import type { Ticket, TicketStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { History, RefreshCw, CalendarClock, MapPin, User, Wrench, Zap, Wind, Refrigerator, HelpCircle, CircleDot, UserCheck, Loader, CheckCircle, XCircle } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle,
+  CircleDot,
+  HelpCircle,
+  History,
+  Loader,
+  MapPin,
+  RefreshCw,
+  Refrigerator,
+  UserCheck,
+  Wind,
+  Wrench,
+  XCircle,
+  Zap,
+} from "lucide-react";
 
 const statusIcons: Record<TicketStatus, React.ElementType> = {
   Pending: CircleDot,
@@ -45,7 +66,12 @@ function TicketItem({ ticket }: { ticket: Ticket }) {
           <IssueIcon className="w-4 h-4 mr-2 text-sidebar-accent-foreground" />
           {ticket.customerName}
         </h4>
-        <div className={cn("text-xs font-medium flex items-center", statusColors[ticket.status])}>
+        <div
+          className={cn(
+            "text-xs font-medium flex items-center",
+            statusColors[ticket.status]
+          )}
+        >
           <StatusIcon className="w-3.5 h-3.5 mr-1" />
           {ticket.status}
         </div>
@@ -72,28 +98,42 @@ export function TicketHistoryPanel() {
             <History className="w-5 h-5 mr-2" />
             Ticket History
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={refreshTickets} className="text-sidebar-accent-foreground hover:bg-sidebar-accent/80 h-8 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={refreshTickets}
+            className="text-sidebar-accent-foreground hover:bg-sidebar-accent/80 h-8 w-8"
+          >
             <RefreshCw className="w-4 h-4" />
             <span className="sr-only">Refresh History</span>
           </Button>
         </div>
-        <CardDescription className="text-sidebar-foreground/80">Last 5 created tickets.</CardDescription>
+        <CardDescription className="text-sidebar-foreground/80">
+          Last 5 created tickets.
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-0 flex-grow">
         <ScrollArea className="h-full">
           <div className="p-2 space-y-1">
             {!isInitialized && (
-              <p className="p-4 text-sm text-sidebar-foreground/70 text-center">Loading history...</p>
+              <p className="p-4 text-sm text-sidebar-foreground/70 text-center">
+                Loading history...
+              </p>
             )}
             {isInitialized && tickets.length === 0 && (
-              <p className="p-4 text-sm text-sidebar-foreground/70 text-center">No tickets yet. Create one!</p>
+              <p className="p-4 text-sm text-sidebar-foreground/70 text-center">
+                No tickets yet. Create one!
+              </p>
             )}
-            {isInitialized && tickets.map((ticket, index) => (
-              <React.Fragment key={ticket.id}>
-                <TicketItem ticket={ticket} />
-                {index < tickets.length - 1 && <Separator className="my-0 bg-sidebar-border/50" />}
-              </React.Fragment>
-            ))}
+            {isInitialized &&
+              tickets.map((ticket, index) => (
+                <React.Fragment key={ticket.id}>
+                  <TicketItem ticket={ticket} />
+                  {index < tickets.length - 1 && (
+                    <Separator className="my-0 bg-sidebar-border/50" />
+                  )}
+                </React.Fragment>
+              ))}
           </div>
         </ScrollArea>
       </CardContent>
