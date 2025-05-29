@@ -33,7 +33,7 @@ import { useTicketStore } from "@/hooks/use-ticket-store";
 import { useToast } from "@/hooks/use-toast";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { User, MapPin, Wrench, Zap, Wind, Refrigerator, HelpCircle, FileText, Camera, UsersRound, Clock, Send, Loader2, Search } from "lucide-react";
+import { User, MapPin, Wrench, Zap, Wind, Refrigerator, HelpCircle, FileText, Camera, UsersRound, Clock, Send, Loader2, Search, PhoneIncoming } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -53,8 +53,11 @@ const issueTypeIcons: Record<IssueType, React.ElementType> = {
   Other: HelpCircle,
 };
 
+interface TicketFormProps {
+  initialValues?: Partial<TicketFormSchema>;
+}
 
-export function TicketForm() {
+export function TicketForm({ initialValues }: TicketFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { addTicket } = useTicketStore();
@@ -71,16 +74,40 @@ export function TicketForm() {
   const form = useForm<TicketFormSchema>({
     resolver: zodResolver(ticketFormSchema),
     defaultValues: {
-      customerName: "",
-      address: "",
-      issueType: undefined,
-      notes: "",
-      photo: undefined,
-      assignedEngineerId: undefined,
+      customerName: initialValues?.customerName || "",
+      address: initialValues?.address || "",
+      issueType: initialValues?.issueType || undefined,
+      notes: initialValues?.notes || "",
+      photo: undefined, // Photo cannot be pre-filled easily
+      assignedEngineerId: initialValues?.assignedEngineerId || undefined,
     },
   });
 
+  // Effect to reset form when initialValues change (e.g. simulate call button pressed again)
+  useEffect(() => {
+    if (initialValues) {
+      form.reset({
+        customerName: initialValues.customerName || "",
+        address: initialValues.address || "",
+        issueType: initialValues.issueType || undefined,
+        notes: initialValues.notes || "",
+        photo: undefined,
+        assignedEngineerId: initialValues.assignedEngineerId || undefined,
+      });
+      // If initial values include address, try to geolocate or fetch ETAs based on it
+      // For simplicity, we'll rely on the existing geolocate logic triggered by handleGeolocate
+      if (initialValues.address) {
+         // Potentially trigger geocoding if address is provided but no coords
+         // Or if coords are provided, use them
+      } else {
+        handleGeolocate(); // Attempt to geolocate if no address is pre-filled
+      }
+    }
+  }, [initialValues, form.reset]);
+
+
   const fetchAddressFromCoordinates = useCallback(async (coords: Coordinates) => {
+    // Mock reverse geocoding
     form.setValue("address", `Approx. address for ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
     setLocationError(null);
   }, [form]);
@@ -99,7 +126,14 @@ export function TicketForm() {
           lng: position.coords.longitude,
         };
         setCurrentPosition(coords);
-        fetchAddressFromCoordinates(coords);
+        // Only fetch address if it's not already pre-filled by initialValues
+        if (!form.getValues("address")) {
+          fetchAddressFromCoordinates(coords);
+        } else {
+          // If address was pre-filled, ensure currentPosition is set for ETA
+          // This assumes pre-filled address corresponds to current location for now
+          // A proper solution would geocode the pre-filled address
+        }
         setIsLocating(false);
       },
       (error) => {
@@ -107,11 +141,19 @@ export function TicketForm() {
         setIsLocating(false);
       }
     );
-  }, [fetchAddressFromCoordinates]);
+  }, [fetchAddressFromCoordinates, form]);
 
   useEffect(() => {
-    handleGeolocate(); 
-  }, [handleGeolocate]);
+    // If there are initial values, address might be pre-filled.
+    // Geolocation should still run to get coords for ETA if not provided.
+    if (!initialValues?.address) {
+        handleGeolocate(); 
+    } else if (initialValues.address && !currentPosition) {
+        // If address is prefilled, we'd ideally geocode it to get coordinates.
+        // For now, we'll still try to get current location for ETA.
+        handleGeolocate();
+    }
+  }, [handleGeolocate, initialValues]);
 
   const fetchEngineersEta = useCallback(async (ticketCoords: Coordinates) => {
     if (!ticketCoords) return;
@@ -141,12 +183,20 @@ export function TicketForm() {
 
     if (result.success && result.ticket) {
       addTicket(result.ticket as Ticket); 
-      form.reset();
-      handleGeolocate(); 
+      form.reset({ // Reset to empty or default initial values if any
+        customerName: initialValues?.customerName && initialValues === form.getValues() ? initialValues.customerName : "",
+        address: initialValues?.address && initialValues === form.getValues() ? initialValues.address : "",
+        issueType: initialValues?.issueType && initialValues === form.getValues() ? initialValues.issueType : undefined,
+        notes: initialValues?.notes && initialValues === form.getValues() ? initialValues.notes : "",
+        photo: undefined,
+        assignedEngineerId: initialValues?.assignedEngineerId && initialValues === form.getValues() ? initialValues.assignedEngineerId : undefined,
+      });
+      if (!initialValues) { // Only auto-geolocate if not coming from a pre-filled state
+        handleGeolocate(); 
+      }
       setEngineersWithEta([]); 
-      if (currentPosition) fetchEngineersEta(currentPosition);
-      setIsModalOpen(true); // Open modal
-      // toast({ title: "Success", description: "Ticket created successfully!" }); // Modal will convey success
+      if (currentPosition && !initialValues) fetchEngineersEta(currentPosition);
+      setIsModalOpen(true);
     } else {
       if (result.validationErrors) {
         console.error("Validation errors:", result.validationErrors);

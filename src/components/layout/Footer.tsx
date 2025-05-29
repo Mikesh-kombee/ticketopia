@@ -3,6 +3,8 @@
 
 import Link from 'next/link';
 
+const APP_VERSION = "v1.0.0"; // Placeholder for app version
+
 export function Footer() {
   return (
     <footer className="border-t bg-background text-muted-foreground">
@@ -18,6 +20,9 @@ export function Footer() {
             Terms of Service
           </Link>
         </nav>
+        <div className="text-sm">
+          {APP_VERSION}
+        </div>
       </div>
     </footer>
   );

@@ -1,9 +1,9 @@
 "use server";
 
-import type { Ticket, TicketFormValues, Coordinates } from "./types";
+import type { Ticket, TicketFormValues, Coordinates, IssueType } from "./types";
 import { ticketFormSchema } from "./schema";
-import { категоріIssue } from "@/ai/flows/issue-categorization"; // Corrected import from issue-categorization
-import { engineerEtaCalculation } from "@/ai/flows/engineer-eta"; // Corrected import from engineer-eta
+import { categorizeIssue } from "@/ai/flows/issue-categorization"; // Corrected import
+import { engineerEtaCalculation } from "@/ai/flows/engineer-eta";
 
 // This is a mock in-memory store for demonstration.
 // In a real app, you'd use a database.
@@ -14,25 +14,49 @@ import { engineerEtaCalculation } from "@/ai/flows/engineer-eta"; // Corrected i
 export async function createTicketAction(
   data: TicketFormValues,
   coordinates?: Coordinates
-): Promise<{ success: boolean; ticket?: Ticket; error?: string; validationErrors?: any }> {
+): Promise<{
+  success: boolean;
+  ticket?: Ticket;
+  error?: string;
+  validationErrors?: Record<string, string[]>;
+}> {
   const validationResult = ticketFormSchema.safeParse(data);
   if (!validationResult.success) {
-    return { success: false, validationErrors: validationResult.error.flatten().fieldErrors };
+    return {
+      success: false,
+      validationErrors: validationResult.error.flatten().fieldErrors,
+    };
   }
 
   const validatedData = validationResult.data;
 
   try {
-    // Optional: AI-based issue categorization (example)
-    // const categorization = await categorizeIssue({ notes: validatedData.notes });
-    // console.log("AI Categorization:", categorization);
+    // Example of using AI-based issue categorization.
+    // This can be enabled if desired for the "Other" issue type or for all types.
+    const aiCategorizedIssueType: IssueType = validatedData.issueType;
+    if (validatedData.notes) {
+      try {
+        const categorization = await categorizeIssue({
+          notes: validatedData.notes,
+        });
+        console.log("AI Categorization:", categorization);
+        // Potentially use categorization.category if confidence is high,
+        // or suggest it to the user. For now, just logging.
+        // if (categorization.category && categorization.confidence > 0.7) {
+        //   aiCategorizedIssueType = categorization.category as IssueType;
+        // }
+      } catch (aiError) {
+        console.warn("AI issue categorization failed:", aiError);
+        // Proceed with user-selected issue type if AI fails
+      }
+    }
 
     const newTicket: Ticket = {
       id: crypto.randomUUID(),
       customerName: validatedData.customerName,
       address: validatedData.address,
       coordinates,
-      issueType: validatedData.issueType,
+      issueType: aiCategorizedIssueType, // Use AI categorized or original
       notes: validatedData.notes,
       photoFileName: validatedData.photo?.[0]?.name, // Storing only file name as placeholder
       assignedEngineerId: validatedData.assignedEngineerId,
@@ -47,10 +71,12 @@ export async function createTicketAction(
     // In a real app, this ticket would be saved to a DB.
     // For this example, we return the ticket so the client can update its local store.
     return { success: true, ticket: newTicket };
-
   } catch (error) {
     console.error("Error creating ticket:", error);
-    return { success: false, error: "Failed to create ticket. Please try again." };
+    return {
+      success: false,
+      error: "Failed to create ticket. Please try again.",
+    };
   }
 }
 

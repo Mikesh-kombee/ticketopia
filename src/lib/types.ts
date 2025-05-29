@@ -34,6 +34,7 @@ export interface Engineer {
   etaExplanation?: string;
   status?: EngineerStatus; // Added for dashboard
   avatar?: string; // Added for dashboard
+  distanceKm?: number; // For nearby engineers feature
 }
 
 export interface TicketFormValues {
@@ -150,8 +151,8 @@ export interface AttendanceRecordSummary {
 export interface GeoFenceSite {
   id: string;
   name: string;
-  polygon: Coordinates[]; // Array of lat/lng points defining the geofence
-  center: Coordinates; // For map centering
+  center: Coordinates; // Center of the circular geofence
+  radiusKm: number;    // Radius in kilometers
 }
 
 export interface AttendanceLog {

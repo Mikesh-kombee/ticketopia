@@ -56,12 +56,13 @@ Design a React component `AlertsDashboard` that:
 
 Implement a React component `GeoFenceCheckIn` that:
 - Uses Geolocation API to track the user’s position continuously
-- Fetches the current job site geofence polygon from `/api/geofences/{siteId}`
-- Performs point-in-polygon checks client-side to validate zone presence
+- Fetches or sets geofence dynamically, as a circular area with a configurable radius in kilometers
+- Performs geofence checks using distance-to-center logic
 - Renders a slide-to-check-in button (disabled outside zone), with a tooltip when disabled
 - On successful check-in, logs the event, shows a shift summary (check-in time, site name)
-- Automatically checks out when the user exits the polygon, updating the summary
+- Automatically checks out when the user exits the geofence, updating the summary
 - Persists logs in IndexedDB and syncs to `/api/attendance` when back online
+- Provides a UI to search and display nearby engineers within the configured radius
 
 # Layout & Responsiveness (Web)
 
