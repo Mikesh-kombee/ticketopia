@@ -108,7 +108,7 @@ export function Header() {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src={logoImage}
-            alt="Ticketopia Logo"
+            alt="Corteva Agriscience Logo"
             height={32}
             width={120}
             priority
@@ -195,7 +195,7 @@ export function Header() {
                   >
                     <Image
                       src={logoImage}
-                      alt="Ticketopia Logo"
+                      alt="Corteva Agriscience Logo"
                       height={28}
                       width={100}
                       priority
