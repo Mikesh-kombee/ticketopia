@@ -139,6 +139,8 @@ export interface ActiveEngineerSummary {
   status: EngineerStatus;
   avatar?: string; // URL to placeholder image
   currentTask?: string; // e.g., "Servicing Ticket #123" or "En route to Anytown"
+  currentLocation?: string; // e.g., "Downtown" or "Anytown"
+  distanceKm?: number; // Distance to the current location
 }
 
 export type TicketPriority = "Low" | "Medium" | "High" | "Urgent";
@@ -155,7 +157,7 @@ export interface OpenTicketSummary {
   status: TicketStatus;
   priority: TicketPriority;
   issueType: IssueType;
-  assignedEngineerName?: string;
+  assignedEngineerId?: string;
   lastUpdate: string; // ISO string
 }
 

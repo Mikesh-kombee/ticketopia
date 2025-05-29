@@ -8,17 +8,19 @@ export const metadata: Metadata = {
 
 export default function ExpenseSettingsPage() {
   return (
-    <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Rate Settings</h2>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">
+            Rate Settings
+          </h1>
           <p className="text-muted-foreground">
             Configure reimbursement rates for different vehicle types
           </p>
         </div>
       </div>
       <div className="max-w-2xl">
-        <CostSettingsForm  />
+        <CostSettingsForm />
       </div>
     </div>
   );

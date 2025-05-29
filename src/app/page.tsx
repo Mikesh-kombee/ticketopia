@@ -1,8 +1,10 @@
 "use client";
 
+import { PrivateRoute } from "@/components/auth/PrivateRoute";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -11,6 +13,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type {
+  ActiveEngineerSummary,
+  AlertSeverity,
+  AlertStatus,
+  AttendanceRecordSummary,
+  AttendanceStatus,
+  DashboardAlertSummary,
+  EngineerStatus,
+  IssueType,
+  OpenTicketSummary,
+  RecentRouteLogSummary,
+  TicketPriority,
+  TicketStatus,
+} from "@/lib/types";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import {
   AlertTriangle,
@@ -23,27 +39,9 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PrivateRoute } from "@/components/auth/PrivateRoute";
-import type {
-  ActiveEngineerSummary,
-  AlertSeverity,
-  AlertStatus,
-  AttendanceRecordSummary,
-  AttendanceStatus,
-  DashboardAlertSummary,
-  EngineerStatus,
-  OpenTicketSummary,
-  RecentRouteLogSummary,
-  TicketPriority,
-  TicketStatus,
-} from "@/lib/types";
 
 type SortableKeys<T> = keyof T;
 type SortDirection = "asc" | "desc";
@@ -209,24 +207,24 @@ function DashboardSection<T extends { id: string }>({
           <Icon className="h-4 w-4" />
           {title}
         </CardTitle>
-          <div className="flex items-center gap-2">
-            {onRefresh && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onRefresh}
+        <div className="flex items-center gap-2">
+          {onRefresh && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onRefresh}
               className="h-8 w-8"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            )}
-            {viewAllLink && (
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
+          {viewAllLink && (
             <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-                <Link href={viewAllLink}>
+              <Link href={viewAllLink}>
                 <ExternalLink className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
+              </Link>
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -366,7 +364,7 @@ function DashboardHomePage() {
           currentLocation: "Westside",
         },
       ]);
-        setLoadingStates((prev) => ({ ...prev, engineers: false }));
+      setLoadingStates((prev) => ({ ...prev, engineers: false }));
     }, 100);
 
     setTimeout(async () => {
@@ -374,41 +372,51 @@ function DashboardHomePage() {
       setOpenTickets([
         {
           id: "T001",
-          customer: "ABC Corp",
+          customerName: "ABC Corp",
           status: "Pending" as TicketStatus,
           priority: "High" as TicketPriority,
           assignedEngineerId: "1",
+          issueType: "Plumbing" as IssueType,
+          lastUpdate: "2023-12-15T10:30:00Z",
         },
         {
           id: "T002",
-          customer: "XYZ Ltd",
+          customerName: "XYZ Ltd",
           status: "In Progress" as TicketStatus,
           priority: "Medium" as TicketPriority,
           assignedEngineerId: "2",
+          issueType: "Electrical" as IssueType,
+          lastUpdate: "2023-12-15T09:15:00Z",
         },
         {
           id: "T003",
-          customer: "DEF Inc",
+          customerName: "DEF Inc",
           status: "Assigned" as TicketStatus,
           priority: "Urgent" as TicketPriority,
           assignedEngineerId: "3",
+          issueType: "HVAC" as IssueType,
+          lastUpdate: "2023-12-15T08:45:00Z",
         },
         {
           id: "T004",
-          customer: "GHI Co",
+          customerName: "GHI Co",
           status: "Pending" as TicketStatus,
           priority: "Low" as TicketPriority,
           assignedEngineerId: "4",
+          issueType: "Plumbing" as IssueType,
+          lastUpdate: "2023-12-15T07:30:00Z",
         },
         {
           id: "T005",
-          customer: "JKL Group",
+          customerName: "JKL Group",
           status: "In Progress" as TicketStatus,
           priority: "High" as TicketPriority,
           assignedEngineerId: "5",
+          issueType: "Plumbing" as IssueType,
+          lastUpdate: "2023-12-15T07:30:00Z",
         },
       ]);
-        setLoadingStates((prev) => ({ ...prev, tickets: false }));
+      setLoadingStates((prev) => ({ ...prev, tickets: false }));
     }, 300);
 
     setTimeout(async () => {
@@ -418,36 +426,51 @@ function DashboardHomePage() {
           id: "R001",
           engineerName: "John Doe",
           date: "2023-12-15",
-          distance: 125.5,
+          distanceKm: 125.5,
           engineerId: "1",
+          durationMinutes: 120,
+          stops: 5,
+          mapSnapshotUrl: "/images/routes/route-001.png",
         },
         {
           id: "R002",
           engineerName: "Jane Smith",
           date: "2023-12-15",
-          distance: 89.2,
+          distanceKm: 89.2,
           engineerId: "2",
+          durationMinutes: 90,
+          stops: 3,
+          mapSnapshotUrl: "/images/routes/route-002.png",
         },
         {
           id: "R003",
           engineerName: "Mike Johnson",
           date: "2023-12-14",
-          distance: 156.8,
+          distanceKm: 156.8,
           engineerId: "3",
+          durationMinutes: 180,
+          stops: 7,
+          mapSnapshotUrl: "/images/routes/route-003.png",
         },
         {
           id: "R004",
           engineerName: "Sarah Wilson",
           date: "2023-12-14",
-          distance: 203.4,
+          distanceKm: 203.4,
           engineerId: "4",
+          durationMinutes: 240,
+          stops: 9,
+          mapSnapshotUrl: "/images/routes/route-004.png",
         },
         {
           id: "R005",
           engineerName: "David Brown",
           date: "2023-12-13",
-          distance: 78.9,
+          distanceKm: 78.9,
           engineerId: "5",
+          durationMinutes: 75,
+          stops: 4,
+          mapSnapshotUrl: "/images/routes/route-005.png",
         },
       ]);
       setLoadingStates((prev) => ({ ...prev, routes: false }));
@@ -458,48 +481,48 @@ function DashboardHomePage() {
       setAlerts([
         {
           id: "A001",
-          type: "Speed Alert",
+          type: "Speeding",
           engineerName: "John Doe",
           timestamp: "2023-12-15T10:30:00Z",
           severity: "high" as AlertSeverity,
           status: "new" as AlertStatus,
-          engineerId: "1",
+          alertId: "A001",
         },
         {
           id: "A002",
-          type: "Idle Alert",
+          type: "Long Idle",
           engineerName: "Jane Smith",
           timestamp: "2023-12-15T09:15:00Z",
           severity: "medium" as AlertSeverity,
           status: "reviewed" as AlertStatus,
-          engineerId: "2",
+          alertId: "A002",
         },
         {
           id: "A003",
-          type: "Route Deviation",
+          type: "Geofence Breach",
           engineerName: "Mike Johnson",
           timestamp: "2023-12-15T08:45:00Z",
           severity: "info" as AlertSeverity,
           status: "dismissed" as AlertStatus,
-          engineerId: "3",
+          alertId: "A003",
         },
         {
           id: "A004",
-          type: "Emergency",
+          type: "Service Due",
           engineerName: "Sarah Wilson",
           timestamp: "2023-12-15T11:20:00Z",
           severity: "high" as AlertSeverity,
           status: "new" as AlertStatus,
-          engineerId: "4",
+          alertId: "A004",
         },
         {
           id: "A005",
-          type: "Check-in Late",
+          type: "Unusual Activity",
           engineerName: "David Brown",
           timestamp: "2023-12-15T07:30:00Z",
           severity: "low" as AlertSeverity,
           status: "reviewed" as AlertStatus,
-          engineerId: "5",
+          alertId: "A005",
         },
       ]);
       setLoadingStates((prev) => ({ ...prev, alerts: false }));
@@ -514,6 +537,8 @@ function DashboardHomePage() {
           checkInTime: "08:00",
           status: "Checked In" as AttendanceStatus,
           engineerId: "1",
+          date: "2024-03-20",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
         },
         {
           id: "AT002",
@@ -521,6 +546,8 @@ function DashboardHomePage() {
           checkInTime: "08:15",
           status: "Checked In" as AttendanceStatus,
           engineerId: "2",
+          date: "2024-03-20",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
         },
         {
           id: "AT003",
@@ -528,6 +555,8 @@ function DashboardHomePage() {
           checkInTime: "08:30",
           status: "On Leave" as AttendanceStatus,
           engineerId: "3",
+          date: "2024-03-20",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike",
         },
         {
           id: "AT004",
@@ -535,6 +564,8 @@ function DashboardHomePage() {
           checkInTime: "07:45",
           status: "Checked In" as AttendanceStatus,
           engineerId: "4",
+          date: "2024-03-20",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
         },
         {
           id: "AT005",
@@ -542,6 +573,8 @@ function DashboardHomePage() {
           checkInTime: "09:00",
           status: "Late" as AttendanceStatus,
           engineerId: "5",
+          date: "2024-03-20",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
         },
       ]);
       setLoadingStates((prev) => ({ ...prev, attendance: false }));
@@ -607,8 +640,8 @@ function DashboardHomePage() {
           <Button onClick={refreshData} variant="outline">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh All
-        </Button>
-      </div>
+          </Button>
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           {/* Active Engineers */}
@@ -663,7 +696,7 @@ function DashboardHomePage() {
             }}
             columns={[
               { key: "id", label: "Ticket ID" },
-              { key: "customer", label: "Customer" },
+              { key: "customerName", label: "Customer" },
               {
                 key: "status",
                 label: "Status",
@@ -692,16 +725,16 @@ function DashboardHomePage() {
           />
 
           {/* Recent Route Logs */}
-        <DashboardSection
-          title="Recent Route Logs"
-          icon={Route}
+          <DashboardSection
+            title="Recent Route Logs"
+            icon={Route}
             data={routesSort.items}
             sortConfig={routesSort.sortConfig}
             requestSort={routesSort.requestSort}
             onRowClick={handleRouteClick}
-          isLoading={loadingStates.routes}
+            isLoading={loadingStates.routes}
             viewAllLink="/routes"
-          onRefresh={() => {
+            onRefresh={() => {
               setLoadingStates((prev) => ({ ...prev, routes: true }));
               setTimeout(() => {
                 fetchData();
@@ -715,24 +748,24 @@ function DashboardHomePage() {
                 render: (route) => format(parseISO(route.date), "MMM dd"),
               },
               {
-                key: "distance",
+                key: "distanceKm",
                 label: "Distance (km)",
-                render: (route) => `${route.distance.toFixed(1)} km`,
+                render: (route) => `${route.distanceKm.toFixed(1)} km`,
               },
             ]}
           />
 
           {/* Unread Alerts */}
-        <DashboardSection
-          title="Unread Alerts"
-          icon={AlertTriangle}
+          <DashboardSection
+            title="Unread Alerts"
+            icon={AlertTriangle}
             data={alertsSort.items}
             sortConfig={alertsSort.sortConfig}
             requestSort={alertsSort.requestSort}
             onRowClick={handleAlertClick}
-          isLoading={loadingStates.alerts}
-          viewAllLink="/alerts"
-          onRefresh={() => {
+            isLoading={loadingStates.alerts}
+            viewAllLink="/alerts"
+            onRefresh={() => {
               setLoadingStates((prev) => ({ ...prev, alerts: true }));
               setTimeout(() => {
                 fetchData();
@@ -765,16 +798,16 @@ function DashboardHomePage() {
           />
 
           {/* Today's Attendance */}
-        <DashboardSection
-          title="Today's Attendance"
-          icon={CalendarCheck}
+          <DashboardSection
+            title="Today's Attendance"
+            icon={CalendarCheck}
             data={attendanceSort.items}
             sortConfig={attendanceSort.sortConfig}
             requestSort={attendanceSort.requestSort}
             onRowClick={handleAttendanceClick}
-          isLoading={loadingStates.attendance}
+            isLoading={loadingStates.attendance}
             viewAllLink="/attendance"
-          onRefresh={() => {
+            onRefresh={() => {
               setLoadingStates((prev) => ({ ...prev, attendance: true }));
               setTimeout(() => {
                 fetchData();
@@ -796,9 +829,9 @@ function DashboardHomePage() {
                 ),
               },
             ]}
-        />
+          />
+        </div>
       </div>
-    </div>
     </PrivateRoute>
   );
 }

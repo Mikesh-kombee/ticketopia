@@ -22,8 +22,6 @@ export default function CreateTicketPage() {
       customerName: "Incoming Caller",
       notes:
         "Ticket initiated from a simulated incoming call. Please gather more details.\n",
-      // Potentially pre-fill address if known from caller ID, etc.
-      // address: "123 Call Lane",
     });
   };
 
@@ -38,22 +36,24 @@ export default function CreateTicketPage() {
         <TicketHistoryPanel />
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-grow p-4 md:p-8 overflow-auto container mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold text-primary">
+        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-primary">
                 Create New Ticket
               </h1>
-              <Button variant="outline" onClick={simulateIncomingCall}>
-                <PhoneIncoming className="mr-2 h-4 w-4" /> Simulate Incoming
-                Call
-              </Button>
+              <p className="text-muted-foreground">
+                Create and submit a new service ticket
+              </p>
             </div>
-            <TicketForm
-              key={JSON.stringify(initialFormValues)}
-              initialValues={initialFormValues}
-            />
-          </main>
+            <Button variant="outline" onClick={simulateIncomingCall}>
+              <PhoneIncoming className="mr-2 h-4 w-4" /> Simulate Incoming Call
+            </Button>
+          </div>
+          <TicketForm
+            key={JSON.stringify(initialFormValues)}
+            initialValues={initialFormValues}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>
