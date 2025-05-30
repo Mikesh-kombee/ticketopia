@@ -31,12 +31,12 @@ export default function CreateTicketPage() {
         variant="sidebar"
         collapsible="icon"
         side="left"
-        className="border-r w-[320px] group-data-[collapsible=icon]:w-[var(--sidebar-width-icon)] md:block hidden"
+        className="border-r w-[320px] group-data-[collapsible=icon]:w-[var(--sidebar-width-icon)] md:block hidden sticky top-16 h-[calc(100vh-4rem)]"
       >
         <TicketHistoryPanel />
       </Sidebar>
       <SidebarInset>
-        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+        <div className="container mx-auto p-4 md:p-6 lg:p-8 mt-16">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-primary">

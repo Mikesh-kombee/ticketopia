@@ -27,7 +27,7 @@ import {
   TravelReportFormInput,
   VehicleType,
 } from "@/lib/types";
-import { PlusCircle, Search } from "lucide-react";
+import { MapPin, PlusCircle, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const MOCK_REPORTS_KEY = "ticketopia_travel_reports";
@@ -204,9 +204,12 @@ export default function TravelReportsPage() {
       <div className="container mx-auto p-4 md:p-6 space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Travel & Expense Reports
-            </h1>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-8 w-8 text-primary" />
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Travel & Expense Reports
+              </h1>
+            </div>
             <p className="text-muted-foreground">
               Manage and submit your travel expenses.
             </p>

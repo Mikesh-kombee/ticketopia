@@ -530,7 +530,7 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
         <CardHeader>
           <CardTitle className="flex items-center">
             <LocateFixed className="mr-2 h-6 w-6 text-primary" />
-            GeoFence Attendance
+            GeoFence
           </CardTitle>
           <CardDescription>
             {geoFenceSite

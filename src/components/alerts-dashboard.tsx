@@ -226,9 +226,18 @@ export function AlertsDashboard() {
       {" "}
       {/* Removed min-h-screen and outer padding, will be handled by AppLayout */}
       <div className="flex flex-col sm:flex-row justify-between items-center pb-4 border-b">
-        <div className="flex items-center gap-3 mb-4 sm:mb-0">
-          <BellRing className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Alerts Dashboard</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <BellRing className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight text-primary">
+                Alerts Dashboard
+              </h1>
+            </div>
+            <p className="text-muted-foreground">
+              Monitor and manage system alerts and notifications
+            </p>
+          </div>
         </div>
         <Badge variant="destructive" className="text-sm px-3 py-1.5">
           {activeAlertCount} New Alerts
