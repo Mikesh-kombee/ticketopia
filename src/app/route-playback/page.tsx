@@ -45,13 +45,16 @@ import {
   Router,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import db from "@/lib/db.json";
 
-const mockEngineers: Pick<Engineer, "id" | "name">[] = [
-  { id: "eng1", name: "Alice Smith" },
-  { id: "eng2", name: "Bob Johnson" },
-  { id: "eng3", name: "Charlie Brown (No Data)" },
-];
+// Add type assertions for db.json
+// This tells TypeScript that routeData can be indexed with any string key
+const typedDb = {
+  ...db,
+  routeData: db.routeData as Record<string, RoutePoint[]>,
+};
 
+// Updated to use engineers from db.json
 const IDLE_SPEED_THRESHOLD_KMH = 5;
 const MIN_STOP_DURATION_MINUTES = 5;
 
@@ -59,10 +62,13 @@ export default function RoutePlaybackPage() {
   const { isLoaded: isMapsApiLoaded, error: mapsApiError } = useGoogleMapsApi();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const [engineers, setEngineers] = useState<Pick<Engineer, "id" | "name">[]>(
+    []
+  );
 
   const [selectedEngineerId, setSelectedEngineerId] = useState<
     string | undefined
-  >(mockEngineers[0].id);
+  >();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date("2024-07-30")
   );
@@ -82,6 +88,28 @@ export default function RoutePlaybackPage() {
   const polylineRefs = useRef<google.maps.Polyline[]>([]);
   const stopMarkerRefs = useRef<google.maps.Marker[]>([]);
   const movingMarkerRef = useRef<google.maps.Marker | null>(null);
+
+  // Load engineers from db.json
+  useEffect(() => {
+    // Filter out engineers with data
+    const availableEngineers = db.engineers
+      .filter((eng) => {
+        // Check if this engineer has route data
+        const routeKeys = Object.keys(typedDb.routeData || {});
+        return routeKeys.some((key) => key.startsWith(`${eng.id}-`));
+      })
+      .map((eng) => ({
+        id: eng.id,
+        name: eng.name,
+      }));
+
+    setEngineers(availableEngineers);
+
+    // Set default selected engineer if available
+    if (availableEngineers.length > 0 && !selectedEngineerId) {
+      setSelectedEngineerId(availableEngineers[0].id);
+    }
+  }, [selectedEngineerId]);
 
   const clearMapObjects = useCallback(() => {
     polylineRefs.current.forEach((p) => p.setMap(null));
@@ -108,14 +136,26 @@ export default function RoutePlaybackPage() {
     try {
       let data = await getCachedRoute(cacheKey);
       if (!data) {
-        const response = await fetch(
-          `/api/routes?engineerId=${selectedEngineerId}&date=${dateString}`
-        );
-        if (!response.ok)
-          throw new Error(`Failed to fetch route data: ${response.statusText}`);
-        data = await response.json();
-        if (data && data.length > 0) {
-          await setCachedRoute(cacheKey, data);
+        // Check if the route data exists in db.json
+        if (typedDb.routeData && typedDb.routeData[cacheKey]) {
+          data = typedDb.routeData[cacheKey];
+          // Cache the data for future use
+          if (data && data.length > 0) {
+            await setCachedRoute(cacheKey, data);
+          }
+        } else {
+          // Fallback to API if not found in db.json (in a real app)
+          const response = await fetch(
+            `/api/routes?engineerId=${selectedEngineerId}&date=${dateString}`
+          );
+          if (!response.ok)
+            throw new Error(
+              `Failed to fetch route data: ${response.statusText}`
+            );
+          data = await response.json();
+          if (data && data.length > 0) {
+            await setCachedRoute(cacheKey, data);
+          }
         }
       }
 
@@ -514,7 +554,7 @@ export default function RoutePlaybackPage() {
               <SelectValue placeholder="Select Engineer" />
             </SelectTrigger>
             <SelectContent>
-              {mockEngineers.map((eng) => (
+              {engineers.map((eng) => (
                 <SelectItem key={eng.id} value={eng.id}>
                   {eng.name}
                 </SelectItem>

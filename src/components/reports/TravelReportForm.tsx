@@ -40,6 +40,13 @@ const SURAT_LOCATIONS = [
   "Udhna",
   "Piplod",
   "Athwa",
+  "New Civil Road",
+  "Ghod Dod Road",
+  "Magdalla",
+  "Pal",
+  "Rander",
+  "Sachin GIDC",
+  "Hazira Industrial Area",
 ];
 
 const formSchema = z.object({
@@ -248,7 +255,7 @@ export function TravelReportForm({
           name="cost"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cost (USD)</FormLabel>
+              <FormLabel>Cost (INR)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -258,7 +265,9 @@ export function TravelReportForm({
                   {...field}
                 />
               </FormControl>
-              <FormDescription>Enter the total cost in USD.</FormDescription>
+              <FormDescription>
+                Enter the total cost in Indian Rupees.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

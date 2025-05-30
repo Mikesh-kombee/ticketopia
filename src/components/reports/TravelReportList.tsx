@@ -3,12 +3,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -28,9 +22,8 @@ import {
   Clock,
   FileBadge,
   FileWarning,
-  MoreHorizontal,
   Receipt,
-  X,
+  X
 } from "lucide-react";
 import React, { useState } from "react";
 
@@ -207,31 +200,28 @@ export function TravelReportList({
                           View
                         </Button>
                         {isAdmin && report.status === "Pending" && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  onUpdateStatus(report.id, "Approved")
-                                }
-                                className="flex items-center gap-2 text-green-600"
-                              >
-                                <Check className="h-4 w-4" /> Approve
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  onUpdateStatus(report.id, "Rejected")
-                                }
-                                className="flex items-center gap-2 text-red-600"
-                              >
-                                <X className="h-4 w-4" /> Reject
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                onUpdateStatus(report.id, "Approved")
+                              }
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Approve
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                onUpdateStatus(report.id, "Rejected")
+                              }
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                            >
+                              <X className="h-4 w-4 mr-1" /> Reject
+                            </Button>
+                          </>
                         )}
                       </div>
                     </TableCell>

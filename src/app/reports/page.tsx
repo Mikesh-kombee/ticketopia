@@ -195,7 +195,7 @@ export default function TravelReportsPage() {
         travelArea: data.travelArea,
         expenseType: data.expenseType,
         cost: parseFloat(data.cost),
-        currency: "USD", // Assuming USD for now
+        currency: "INR", // Use Indian Rupees
         receiptUrl:
           data.receipt && data.receipt.length > 0
             ? URL.createObjectURL(data.receipt[0])

@@ -94,8 +94,6 @@ export const alertTypes: AlertType[] = [
   "Speeding",
   "Long Idle",
   "Geofence Breach",
-  "Service Due",
-  "Unusual Activity",
 ];
 export const alertSeverities: AlertSeverity[] = [
   "high",
