@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import db from "@/lib/db.json";
 import {
   ExpenseType,
   ReportStatus,
@@ -30,6 +31,7 @@ import {
 import { MapPin, PlusCircle, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+// Storage key for local persistence
 const MOCK_REPORTS_KEY = "ticketopia_travel_reports";
 
 // Mock API functions (replace with actual API calls)
@@ -37,8 +39,49 @@ const fetchReportsFromAPI = async (): Promise<TravelReport[]> => {
   console.log("Fetching reports from API (mock)");
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Try to get from localStorage first
   const localData = localStorage.getItem(MOCK_REPORTS_KEY);
-  return localData ? JSON.parse(localData) : [];
+
+  if (localData) {
+    return JSON.parse(localData);
+  } else {
+    // Initialize with db.json data if nothing exists in localStorage
+    const mockReports: TravelReport[] = (db.expenseSubmissions || []).map(
+      (submission) => ({
+        id: submission.id,
+        employeeId: submission.userId,
+        employeeName: submission.userName,
+        vehicleUsed: mapVehicleType(submission.vehicleType),
+        travelArea: submission.notes?.split(" to ")?.[1] || "Downtown",
+        expenseType: "Fuel" as ExpenseType, // Default to Fuel for all initial records
+        cost: submission.totalCost,
+        currency: "USD",
+        submissionDate: new Date(
+          submission.submissionDate + "T10:00:00Z"
+        ).toISOString(),
+        status: submission.status as ReportStatus,
+        notes: submission.notes,
+      })
+    );
+
+    localStorage.setItem(MOCK_REPORTS_KEY, JSON.stringify(mockReports));
+    return mockReports;
+  }
+};
+
+// Helper function to map vehicle types
+const mapVehicleType = (type: string): VehicleType => {
+  switch (type) {
+    case "Two Wheeler":
+      return "bike";
+    case "Four Wheeler":
+      return "car";
+    case "Public Transport":
+      return "public_transport";
+    default:
+      return "other";
+  }
 };
 
 const saveReportToAPI = async (report: TravelReport): Promise<TravelReport> => {
@@ -82,8 +125,8 @@ export default function TravelReportsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterArea, setFilterArea] = useState("");
-  const [filterEmployee, setFilterEmployee] = useState("");
+  const [filterArea, setFilterArea] = useState("all_areas");
+  const [filterEmployee, setFilterEmployee] = useState("all_employees");
   // TODO: Add date range filter state
 
   const isAdmin = user?.role === "admin";
@@ -122,12 +165,12 @@ export default function TravelReportsPage() {
           report.expenseType.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    if (filterArea) {
+    if (filterArea && filterArea !== "all_areas") {
       currentReports = currentReports.filter((report) =>
         report.travelArea.toLowerCase().includes(filterArea.toLowerCase())
       );
     }
-    if (filterEmployee) {
+    if (filterEmployee && filterEmployee !== "all_employees") {
       currentReports = currentReports.filter((report) =>
         report.employeeName.toLowerCase().includes(filterEmployee.toLowerCase())
       );
@@ -253,7 +296,7 @@ export default function TravelReportsPage() {
               <SelectValue placeholder="Filter by Travel Area" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={uniqueTravelAreas[0]}>All Areas</SelectItem>
+              <SelectItem value="all_areas">All Areas</SelectItem>
               {uniqueTravelAreas.map((area) => (
                 <SelectItem key={area} value={area}>
                   {area}
@@ -266,9 +309,7 @@ export default function TravelReportsPage() {
               <SelectValue placeholder="Filter by Employee" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={uniqueEmployeeNames[0]}>
-                All Employees
-              </SelectItem>
+              <SelectItem value="all_employees">All Employees</SelectItem>
               {uniqueEmployeeNames.map((name) => (
                 <SelectItem key={name} value={name}>
                   {name}
@@ -281,8 +322,8 @@ export default function TravelReportsPage() {
             variant="outline"
             onClick={() => {
               setSearchTerm("");
-              setFilterArea("");
-              setFilterEmployee(""); /* Reset date filter */
+              setFilterArea("all_areas");
+              setFilterEmployee("all_employees"); /* Reset date filter */
             }}
           >
             Clear Filters

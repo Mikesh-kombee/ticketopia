@@ -23,7 +23,6 @@ export function Footer() {
             Terms of Service
           </Link>
         </nav>
-        <div className="text-sm text-muted-foreground">v1.0.0</div>
       </div>
     </footer>
   );

@@ -1,8 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,201 +21,311 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ExpenseType, TravelReportFormInput, VehicleType } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
+import { Car, FileText, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-const reportSchema = z.object({
-  // employeeName: z.string().min(1, "Employee name is required"), // Auto-filled
-  vehicleUsed: z.enum(["car", "bike", "public_transport", "other"], {
-    errorMap: () => ({ message: "Please select a vehicle type." }),
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+
+// Surat locations for dropdown suggestions
+const SURAT_LOCATIONS = [
+  "Varachha Diamond Market",
+  "Adajan Area",
+  "City Light Area",
+  "Ring Road",
+  "Vesu",
+  "Althan",
+  "Katargam",
+  "Udhna",
+  "Piplod",
+  "Athwa",
+];
+
+const formSchema = z.object({
+  vehicleUsed: z.enum(["car", "bike", "public_transport", "other"] as const),
+  travelArea: z.string().min(3, {
+    message: "Travel area must be at least 3 characters.",
   }),
-  travelArea: z.string().min(1, "Travel area is required"),
-  expenseType: z.enum(["Fuel", "Toll", "Meals", "Accommodation", "Other"], {
-    errorMap: () => ({ message: "Please select an expense type." }),
-  }),
+  expenseType: z.enum([
+    "Fuel",
+    "Toll",
+    "Meals",
+    "Accommodation",
+    "Other",
+  ] as const),
   cost: z
     .string()
-    .refine((value) => !isNaN(parseFloat(value)) && parseFloat(value) > 0, {
-      message: "Please enter a valid cost greater than 0",
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Cost must be a positive number.",
     }),
-  receipt: z.any().optional(),
+  receipt: z
+    .any()
+    .optional()
+    .refine(
+      (files) => !files || !files.length || files[0].size <= MAX_FILE_SIZE,
+      `Max file size is 5MB.`
+    )
+    .refine(
+      (files) =>
+        !files || !files.length || ACCEPTED_FILE_TYPES.includes(files[0].type),
+      "Only .jpg, .png, and .pdf files are accepted."
+    ),
   notes: z.string().optional(),
 });
 
 interface TravelReportFormProps {
   onSubmit: (data: TravelReportFormInput) => Promise<void>;
   isSubmitting: boolean;
-  defaultValues?: Partial<TravelReportFormInput & { employeeName: string }>;
+  defaultValues?: {
+    employeeName: string;
+    vehicleUsed: VehicleType;
+    expenseType: ExpenseType;
+  };
 }
-
-const vehicleOptions: { label: string; value: VehicleType }[] = [
-  { label: "Car", value: "car" },
-  { label: "Bike", value: "bike" },
-  { label: "Public Transport", value: "public_transport" },
-  { label: "Other", value: "other" },
-];
-
-const expenseTypeOptions: { label: string; value: ExpenseType }[] = [
-  { label: "Fuel", value: "Fuel" },
-  { label: "Toll", value: "Toll" },
-  { label: "Meals", value: "Meals" },
-  { label: "Accommodation", value: "Accommodation" },
-  { label: "Other", value: "Other" },
-];
 
 export function TravelReportForm({
   onSubmit,
   isSubmitting,
   defaultValues,
 }: TravelReportFormProps) {
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<TravelReportFormInput>({
-    resolver: zodResolver(reportSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      vehicleUsed: defaultValues?.vehicleUsed || undefined,
-      travelArea: defaultValues?.travelArea || "",
-      expenseType: defaultValues?.expenseType || undefined,
-      cost: defaultValues?.cost || "",
-      notes: defaultValues?.notes || "",
+      vehicleUsed: defaultValues?.vehicleUsed || "car",
+      travelArea: "",
+      expenseType: defaultValues?.expenseType || "Fuel",
+      cost: "",
+      notes: "",
     },
   });
 
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    await onSubmit(values as TravelReportFormInput);
+    form.reset();
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-      <div>
-        <Label htmlFor="employeeName">Employee Name</Label>
-        <Input
-          id="employeeName"
-          type="text"
-          value={defaultValues?.employeeName || "N/A"}
-          readOnly
-          disabled
-          className="mt-1 bg-muted/50"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="vehicleUsed">Vehicle Used</Label>
-        <Controller
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Vehicle Type Field */}
+        <FormField
+          control={form.control}
           name="vehicleUsed"
-          control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger id="vehicleUsed" className="mt-1">
-                <SelectValue placeholder="Select vehicle type" />
-              </SelectTrigger>
-              <SelectContent>
-                {vehicleOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+            <FormItem>
+              <FormLabel>Vehicle Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vehicle type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="car">
+                    <div className="flex items-center gap-2">
+                      <Car className="h-4 w-4" />
+                      <span>Car</span>
+                    </div>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <SelectItem value="bike">
+                    <div className="flex items-center gap-2">
+                      <span>🚲</span>
+                      <span>Bike</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="public_transport">
+                    <div className="flex items-center gap-2">
+                      <span>🚌</span>
+                      <span>Public Transport</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="other">
+                    <div className="flex items-center gap-2">
+                      <span>🚕</span>
+                      <span>Other</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the type of vehicle used for travel.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
           )}
         />
-        {errors.vehicleUsed && (
-          <p className="text-sm text-red-500 mt-1">
-            {errors.vehicleUsed.message}
-          </p>
-        )}
-      </div>
 
-      <div>
-        <Label htmlFor="travelArea">Travel Area</Label>
-        <Input
-          id="travelArea"
-          type="text"
-          {...register("travelArea")}
-          placeholder="e.g., Downtown, Client Site X"
-          className="mt-1"
+        {/* Travel Area Field */}
+        <FormField
+          control={form.control}
+          name="travelArea"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Travel Area</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value || SURAT_LOCATIONS[0]}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select area in Surat" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {SURAT_LOCATIONS.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the area in Surat where travel occurred.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.travelArea && (
-          <p className="text-sm text-red-500 mt-1">
-            {errors.travelArea.message}
-          </p>
-        )}
-      </div>
 
-      <div>
-        <Label htmlFor="expenseType">Expense Type</Label>
-        <Controller
+        {/* Expense Type Field */}
+        <FormField
+          control={form.control}
           name="expenseType"
-          control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger id="expenseType" className="mt-1">
-                <SelectValue placeholder="Select expense type" />
-              </SelectTrigger>
-              <SelectContent>
-                {expenseTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+            <FormItem>
+              <FormLabel>Expense Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select expense type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Fuel">
+                    <div className="flex items-center gap-2">
+                      <span>⛽</span>
+                      <span>Fuel</span>
+                    </div>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <SelectItem value="Toll">
+                    <div className="flex items-center gap-2">
+                      <span>🛣️</span>
+                      <span>Toll</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Meals">
+                    <div className="flex items-center gap-2">
+                      <span>🍔</span>
+                      <span>Meals</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Accommodation">
+                    <div className="flex items-center gap-2">
+                      <span>🏨</span>
+                      <span>Accommodation</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Other">
+                    <div className="flex items-center gap-2">
+                      <span>📝</span>
+                      <span>Other</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the type of expense for this report.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
           )}
         />
-        {errors.expenseType && (
-          <p className="text-sm text-red-500 mt-1">
-            {errors.expenseType.message}
-          </p>
-        )}
-      </div>
 
-      <div>
-        <Label htmlFor="cost">Cost (USD)</Label>
-        <Input
-          id="cost"
-          type="number"
-          step="0.01"
-          {...register("cost")}
-          placeholder="e.g., 25.50"
-          className="mt-1"
+        {/* Cost Field */}
+        <FormField
+          control={form.control}
+          name="cost"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cost (USD)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>Enter the total cost in USD.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.cost && (
-          <p className="text-sm text-red-500 mt-1">{errors.cost.message}</p>
-        )}
-      </div>
 
-      <div>
-        <Label htmlFor="receipt">Receipt (Optional)</Label>
-        <Input
-          id="receipt"
-          type="file"
-          {...register("receipt")}
-          className="mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+        {/* Receipt Upload Field */}
+        <FormField
+          control={form.control}
+          name="receipt"
+          render={({ field: { value, onChange, ...fieldProps } }) => (
+            <FormItem>
+              <FormLabel>Receipt (Optional)</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  className="cursor-pointer"
+                  onChange={(e) => onChange(e.target.files)}
+                  {...fieldProps}
+                />
+              </FormControl>
+              <FormDescription>
+                Upload a receipt (JPG, PNG, or PDF, max 5MB).
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.receipt && (
-          <p className="text-sm text-red-500 mt-1">{errors.receipt.message}</p>
-        )}
-      </div>
 
-      <div>
-        <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea
-          id="notes"
-          {...register("notes")}
-          placeholder="Add any additional details..."
-          className="mt-1"
+        {/* Notes Field */}
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Any additional details about this expense..."
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Add any additional information or context for this expense.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-          </>
-        ) : (
-          "Submit Report"
-        )}
-      </Button>
-    </form>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <FileText className="mr-2 h-4 w-4" />
+                Submit Report
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

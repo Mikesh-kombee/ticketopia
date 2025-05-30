@@ -16,7 +16,7 @@
       "vehicleType": "Two Wheeler",
       "totalCost": 325,
       "status": "Pending",
-      "notes": "Client visit to Diamond Market"
+      "notes": "Client visit to Varachha Diamond Market"
     },
     {
       "id": "exp2",
@@ -27,7 +27,8 @@
       "toll": 50,
       "vehicleType": "Four Wheeler",
       "totalCost": 450,
-      "status": "Approved"
+      "status": "Approved",
+      "notes": "Meeting at Adajan Road office"
     },
     {
       "id": "exp3",
@@ -39,7 +40,7 @@
       "vehicleType": "Public Transport",
       "totalCost": 200,
       "status": "Rejected",
-      "notes": "Incomplete documentation"
+      "notes": "Incomplete documentation for Vesu visit"
     }
   ],
   "rateConfigs": [
@@ -207,42 +208,42 @@
   "activeEngineers": [
     {
       "id": "eng1",
-      "name": "Alice Smith",
+      "name": "Ankit Patel",
       "status": "Active",
-      "avatar": "https://placehold.co/40x40.png?text=AS",
+      "avatar": "https://placehold.co/40x40.png?text=AP",
       "currentTask": "Servicing Ticket #T1001"
     },
     {
       "id": "eng2",
-      "name": "Bob Johnson",
+      "name": "Bhavesh Mehta",
       "status": "On Route",
-      "avatar": "https://placehold.co/40x40.png?text=BJ",
-      "currentTask": "En route to Downtown"
+      "avatar": "https://placehold.co/40x40.png?text=BM",
+      "currentTask": "En route to Adajan"
     },
     {
       "id": "eng3",
-      "name": "Charlie Brown",
+      "name": "Chirag Desai",
       "status": "On Break",
-      "avatar": "https://placehold.co/40x40.png?text=CB"
+      "avatar": "https://placehold.co/40x40.png?text=CD"
     },
     {
       "id": "eng4",
-      "name": "Diana Prince",
+      "name": "Divya Sharma",
       "status": "Offline",
-      "avatar": "https://placehold.co/40x40.png?text=DP"
+      "avatar": "https://placehold.co/40x40.png?text=DS"
     },
     {
       "id": "eng5",
-      "name": "Edward Nygma",
+      "name": "Esha Patel",
       "status": "Active",
-      "avatar": "https://placehold.co/40x40.png?text=EN",
+      "avatar": "https://placehold.co/40x40.png?text=EP",
       "currentTask": "Awaiting Assignment"
     }
   ],
   "openTickets": [
     {
       "id": "T001",
-      "customerName": "ABC Corp",
+      "customerName": "Adani Exports",
       "status": "Pending",
       "priority": "High",
       "assignedEngineerId": "1",
@@ -251,7 +252,7 @@
     },
     {
       "id": "T002",
-      "customerName": "XYZ Ltd",
+      "customerName": "Reliance Industries",
       "status": "In Progress",
       "priority": "Medium",
       "assignedEngineerId": "2",
@@ -260,7 +261,7 @@
     },
     {
       "id": "T003",
-      "customerName": "DEF Inc",
+      "customerName": "Tata Consultancy",
       "status": "Assigned",
       "priority": "Urgent",
       "assignedEngineerId": "3",
@@ -269,7 +270,7 @@
     },
     {
       "id": "T004",
-      "customerName": "GHI Co",
+      "customerName": "Infosys Ltd",
       "status": "Pending",
       "priority": "Low",
       "assignedEngineerId": "4",
@@ -278,7 +279,7 @@
     },
     {
       "id": "T005",
-      "customerName": "JKL Group",
+      "customerName": "Mahindra Group",
       "status": "In Progress",
       "priority": "High",
       "assignedEngineerId": "5",
@@ -289,7 +290,7 @@
   "routeLogs": [
     {
       "id": "R001",
-      "engineerName": "John Doe",
+      "engineerName": "Ankit Patel",
       "date": "2023-12-15",
       "distanceKm": 125.5,
       "engineerId": "1",
@@ -299,7 +300,7 @@
     },
     {
       "id": "R002",
-      "engineerName": "Jane Smith",
+      "engineerName": "Bhavesh Mehta",
       "date": "2023-12-15",
       "distanceKm": 89.2,
       "engineerId": "2",
@@ -309,7 +310,7 @@
     },
     {
       "id": "R003",
-      "engineerName": "Mike Johnson",
+      "engineerName": "Chirag Desai",
       "date": "2023-12-14",
       "distanceKm": 156.8,
       "engineerId": "3",
@@ -319,7 +320,7 @@
     },
     {
       "id": "R004",
-      "engineerName": "Sarah Wilson",
+      "engineerName": "Divya Sharma",
       "date": "2023-12-14",
       "distanceKm": 203.4,
       "engineerId": "4",
@@ -329,7 +330,7 @@
     },
     {
       "id": "R005",
-      "engineerName": "David Brown",
+      "engineerName": "Esha Patel",
       "date": "2023-12-13",
       "distanceKm": 78.9,
       "engineerId": "5",
@@ -342,7 +343,7 @@
     {
       "id": "A001",
       "type": "Speeding",
-      "engineerName": "John Doe",
+      "engineerName": "Ankit Patel",
       "timestamp": "2023-12-15T10:30:00Z",
       "severity": "high",
       "status": "new",
@@ -351,7 +352,7 @@
     {
       "id": "A002",
       "type": "Long Idle",
-      "engineerName": "Jane Smith",
+      "engineerName": "Bhavesh Mehta",
       "timestamp": "2023-12-15T09:15:00Z",
       "severity": "medium",
       "status": "reviewed",
@@ -360,7 +361,7 @@
     {
       "id": "A003",
       "type": "Geofence Breach",
-      "engineerName": "Mike Johnson",
+      "engineerName": "Chirag Desai",
       "timestamp": "2023-12-15T08:45:00Z",
       "severity": "info",
       "status": "dismissed",
@@ -369,7 +370,7 @@
     {
       "id": "A004",
       "type": "Service Due",
-      "engineerName": "Sarah Wilson",
+      "engineerName": "Divya Sharma",
       "timestamp": "2023-12-15T11:20:00Z",
       "severity": "high",
       "status": "new",
@@ -378,7 +379,7 @@
     {
       "id": "A005",
       "type": "Unusual Activity",
-      "engineerName": "David Brown",
+      "engineerName": "Esha Patel",
       "timestamp": "2023-12-15T07:30:00Z",
       "severity": "low",
       "status": "reviewed",
@@ -388,100 +389,100 @@
   "attendance": [
     {
       "id": "AT001",
-      "engineerName": "John Doe",
+      "engineerName": "Ankit Patel",
       "checkInTime": "08:00",
       "status": "Checked In",
       "engineerId": "1",
       "date": "2024-03-20",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Ankit"
     },
     {
       "id": "AT002",
-      "engineerName": "Jane Smith",
+      "engineerName": "Bhavesh Mehta",
       "checkInTime": "08:15",
       "status": "Checked In",
       "engineerId": "2",
       "date": "2024-03-20",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane"
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Bhavesh"
     },
     {
       "id": "AT003",
-      "engineerName": "Mike Johnson",
+      "engineerName": "Chirag Desai",
       "checkInTime": "08:30",
       "status": "On Leave",
       "engineerId": "3",
       "date": "2024-03-20",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike"
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Chirag"
     },
     {
       "id": "AT004",
-      "engineerName": "Sarah Wilson",
+      "engineerName": "Divya Sharma",
       "checkInTime": "07:45",
       "status": "Checked In",
       "engineerId": "4",
       "date": "2024-03-20",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Divya"
     },
     {
       "id": "AT005",
-      "engineerName": "David Brown",
+      "engineerName": "Esha Patel",
       "checkInTime": "09:00",
       "status": "Late",
       "engineerId": "5",
       "date": "2024-03-20",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=David"
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Esha"
     }
   ],
   "todaysAttendance": [
     {
       "id": "ATT4000",
       "engineerId": "eng1",
-      "engineerName": "Alice Smith",
+      "engineerName": "Ankit Patel",
       "checkInTime": "08:15",
       "status": "Checked In",
-      "avatar": "https://placehold.co/40x40.png?text=AS",
+      "avatar": "https://placehold.co/40x40.png?text=AP",
       "date": "2024-07-31"
     },
     {
       "id": "ATT4001",
       "engineerId": "eng2",
-      "engineerName": "Bob Johnson",
+      "engineerName": "Bhavesh Mehta",
       "checkInTime": "09:00",
       "status": "Late",
-      "avatar": "https://placehold.co/40x40.png?text=BJ",
+      "avatar": "https://placehold.co/40x40.png?text=BM",
       "date": "2024-07-31"
     },
     {
       "id": "ATT4002",
       "engineerId": "eng3",
-      "engineerName": "Charlie Brown",
+      "engineerName": "Chirag Desai",
       "status": "On Leave",
-      "avatar": "https://placehold.co/40x40.png?text=CB",
+      "avatar": "https://placehold.co/40x40.png?text=CD",
       "date": "2024-07-31"
     }
   ],
   "dashboardOpenTickets": [
     {
       "id": "T1001",
-      "customerName": "John Doe",
+      "customerName": "Surya Textiles",
       "status": "Assigned",
       "priority": "High",
       "issueType": "Plumbing",
-      "assignedEngineerName": "Alice Smith",
+      "assignedEngineerName": "Ankit Patel",
       "lastUpdate": "2024-07-31T10:00:00Z"
     },
     {
       "id": "T1002",
-      "customerName": "Jane Smith",
+      "customerName": "Krishna Jewelers",
       "status": "In Progress",
       "priority": "Urgent",
       "issueType": "Electrical",
-      "assignedEngineerName": "Bob Johnson",
+      "assignedEngineerName": "Bhavesh Mehta",
       "lastUpdate": "2024-07-31T09:00:00Z"
     },
     {
       "id": "T1003",
-      "customerName": "Mike Williams",
+      "customerName": "Mahalaxmi Industries",
       "status": "Pending",
       "priority": "Medium",
       "issueType": "HVAC",
@@ -489,16 +490,16 @@
     },
     {
       "id": "T1004",
-      "customerName": "Lisa Brown",
+      "customerName": "Lotus Electronics",
       "status": "Assigned",
       "priority": "Low",
       "issueType": "Appliance Repair",
-      "assignedEngineerName": "Charlie Brown",
+      "assignedEngineerName": "Chirag Desai",
       "lastUpdate": "2024-07-31T06:00:00Z"
     },
     {
       "id": "T1005",
-      "customerName": "David Wilson",
+      "customerName": "Dharma Diamonds",
       "status": "Pending",
       "priority": "Medium",
       "issueType": "Other",
@@ -514,14 +515,14 @@
     },
     "site-002": {
       "id": "site-002",
-      "name": "Diamond Market Hub",
-      "center": { "lat": 21.1825, "lng": 72.821 },
+      "name": "Varachha Diamond Market",
+      "center": { "lat": 21.2167, "lng": 72.8667 },
       "radiusKm": 1.0
     },
     "user-current-location": {
       "id": "user-current-location",
-      "name": "Dynamic User Zone",
-      "center": { "lat": 21.165, "lng": 72.84 },
+      "name": "Adajan Area",
+      "center": { "lat": 21.19, "lng": 72.79 },
       "radiusKm": 0.2
     }
   },
@@ -529,7 +530,7 @@
     {
       "id": "R2000",
       "engineerId": "eng1",
-      "engineerName": "Alice Smith",
+      "engineerName": "Ankit Patel",
       "date": "2024-07-31",
       "distanceKm": 55.5,
       "durationMinutes": 150,
@@ -539,7 +540,7 @@
     {
       "id": "R2001",
       "engineerId": "eng2",
-      "engineerName": "Bob Johnson",
+      "engineerName": "Bhavesh Mehta",
       "date": "2024-07-30",
       "distanceKm": 70.2,
       "durationMinutes": 120,
@@ -549,7 +550,7 @@
     {
       "id": "R2002",
       "engineerId": "eng3",
-      "engineerName": "Charlie Brown",
+      "engineerName": "Chirag Desai",
       "date": "2024-07-29",
       "distanceKm": 30.0,
       "durationMinutes": 90,
@@ -560,38 +561,38 @@
   "engineers": [
     {
       "id": "eng1",
-      "name": "Alice Smith",
+      "name": "Ankit Patel",
       "location": { "lat": 21.1702, "lng": 72.8311 },
       "specialization": ["Plumbing", "HVAC"],
-      "avatar": "https://placehold.co/40x40.png?text=AS"
+      "avatar": "https://placehold.co/40x40.png?text=AP"
     },
     {
       "id": "eng2",
-      "name": "Bob Johnson",
-      "location": { "lat": 21.175, "lng": 72.835 },
+      "name": "Bhavesh Mehta",
+      "location": { "lat": 21.2167, "lng": 72.8667 },
       "specialization": ["Electrical"],
-      "avatar": "https://placehold.co/40x40.png?text=BJ"
+      "avatar": "https://placehold.co/40x40.png?text=BM"
     },
     {
       "id": "eng3",
-      "name": "Charlie Brown",
-      "location": { "lat": 21.165, "lng": 72.828 },
+      "name": "Chirag Desai",
+      "location": { "lat": 21.19, "lng": 72.79 },
       "specialization": ["Appliance Repair", "HVAC"],
-      "avatar": "https://placehold.co/40x40.png?text=CB"
+      "avatar": "https://placehold.co/40x40.png?text=CD"
     },
     {
       "id": "eng4",
-      "name": "Diana Prince",
-      "location": { "lat": 21.18, "lng": 72.84 },
+      "name": "Divya Sharma",
+      "location": { "lat": 21.195, "lng": 72.845 },
       "specialization": ["Plumbing"],
-      "avatar": "https://placehold.co/40x40.png?text=DP"
+      "avatar": "https://placehold.co/40x40.png?text=DS"
     },
     {
       "id": "eng5",
-      "name": "Edward Nygma",
-      "location": { "lat": 21.16, "lng": 72.825 },
+      "name": "Esha Patel",
+      "location": { "lat": 21.1822, "lng": 72.83 },
       "specialization": ["Other", "Electrical"],
-      "avatar": "https://placehold.co/40x40.png?text=EN"
+      "avatar": "https://placehold.co/40x40.png?text=EP"
     }
   ]
 }

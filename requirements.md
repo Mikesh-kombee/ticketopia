@@ -109,7 +109,6 @@ Design and generate a global `AppLayout` component in React that:
 **Footer Requirements**:
 - Centered: © 2025 YourCompany Name. All rights reserved.
 - Links: Privacy Policy, Terms of Service
-- Right: App version (e.g., "v1.0.0")
 
 **Responsiveness**:
 - Mobile-first design with fluid grid layout
