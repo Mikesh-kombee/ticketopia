@@ -10,13 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useGoogleMapsApi } from "@/hooks/use-google-maps-api";
 import type {
   AttendanceLog,
@@ -26,6 +19,16 @@ import type {
 } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 // Removed isPointInPolygon, will use distance calculation
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,6 +45,7 @@ import {
   LocateFixed,
   LogOut,
   Navigation,
+  RefreshCw,
   ShieldAlert,
   Users,
   XCircle,
@@ -90,6 +94,19 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
 
   const { toast } = useToast();
 
+  const [showAutoCheckoutDialog, setShowAutoCheckoutDialog] = useState(false);
+  const [pendingLogsCount, setPendingLogsCount] = useState(0);
+
+  // Add a function to check for pending logs count
+  const checkPendingLogs = useCallback(async () => {
+    try {
+      const pendingLogs = await getPendingAttendanceLogs();
+      setPendingLogsCount(pendingLogs.length);
+    } catch (error) {
+      console.error("Failed to check pending logs:", error);
+    }
+  }, []);
+
   const calculateDistanceKm = useCallback(
     (coord1: Coordinates, coord2: Coordinates): number => {
       if (
@@ -134,31 +151,32 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
     [isMapsApiLoaded]
   );
 
-  const attemptSync = useCallback(async () => {
+  // Update enhancedAttemptSync to handle syncing state completely
+  const enhancedAttemptSync = useCallback(async () => {
     if (isSyncing || (typeof navigator !== "undefined" && !navigator.onLine)) {
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        toast({
-          title: "Offline",
-          description: "Attendance logs will sync when back online.",
-          variant: "default",
-        });
-      }
       return;
     }
+
     setIsSyncing(true);
     try {
+      // First check pending logs
       const pendingLogs = await getPendingAttendanceLogs();
+      setPendingLogsCount(pendingLogs.length);
+
       if (pendingLogs.length === 0) {
-        setIsSyncing(false);
         return;
       }
+
+      // Then attempt to sync them
       const response = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pendingLogs),
       });
+
       if (!response.ok) throw new Error(`Sync failed: ${response.statusText}`);
       const syncResults = await response.json();
+
       for (const result of syncResults.results) {
         if (result.synced) {
           const logToUpdate = pendingLogs.find((l) => l.logId === result.logId);
@@ -171,6 +189,8 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
           console.warn(`Log ${result.logId} failed to sync: ${result.message}`);
         }
       }
+
+      // Show success toast
       toast({
         title: "Sync Successful",
         description: `${pendingLogs.length} logs synced.`,
@@ -183,6 +203,9 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
         description: "Could not sync attendance logs to server.",
       });
     } finally {
+      // Check final pending logs status
+      const finalPendingLogs = await getPendingAttendanceLogs();
+      setPendingLogsCount(finalPendingLogs.length);
       setIsSyncing(false);
     }
   }, [isSyncing, toast]);
@@ -212,7 +235,10 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
             "p"
           )}.`,
         });
-        attemptSync();
+        // Update pending logs count after check-in
+        checkPendingLogs();
+        // Try to sync immediately
+        enhancedAttemptSync();
       } else {
         throw new Error("Failed to retrieve saved log from DB.");
       }
@@ -224,7 +250,14 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
         description: "Could not save check-in locally.",
       });
     }
-  }, [geoFenceSite, isInZone, userId, toast, attemptSync]);
+  }, [
+    geoFenceSite,
+    isInZone,
+    userId,
+    toast,
+    checkPendingLogs,
+    enhancedAttemptSync,
+  ]);
 
   const handleCheckOut = useCallback(async () => {
     if (!currentLog || !geoFenceSite) return;
@@ -245,7 +278,10 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
           "p"
         )}.`,
       });
-      attemptSync();
+      // Update pending logs count after check-out
+      checkPendingLogs();
+      // Try to sync immediately
+      enhancedAttemptSync();
     } catch (dbError) {
       console.error("Failed to log check-out:", dbError);
       toast({
@@ -254,7 +290,7 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
         description: "Could not save check-out locally.",
       });
     }
-  }, [currentLog, geoFenceSite, toast, attemptSync]);
+  }, [currentLog, geoFenceSite, toast, checkPendingLogs, enhancedAttemptSync]);
 
   useEffect(() => {
     async function fetchGeoFence() {
@@ -408,18 +444,18 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
         geoFenceSite.center
       );
       const currentlyInZone = distance <= geoFenceSite.radiusKm;
+
       if (isInZone !== currentlyInZone) {
         setIsInZone(currentlyInZone);
+
+        // If was in zone but now out of zone and checked in
         if (!currentlyInZone && isCheckedIn && currentLog) {
-          handleCheckOut();
-          toast({
-            title: "Auto Check-Out",
-            description: `You have left the ${geoFenceSite.name} geofence.`,
-          });
+          // Show confirmation dialog instead of auto checkout
+          setShowAutoCheckoutDialog(true);
         } else if (currentlyInZone && !isCheckedIn) {
           toast({
             title: "In Zone",
-            description: `You have entered ${geoFenceSite.name}. Slide to check-in.`,
+            description: `You have entered ${geoFenceSite.name}. You can now check in.`,
           });
         }
       }
@@ -431,7 +467,6 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
     geoFenceSite,
     isCheckedIn,
     currentLog,
-    handleCheckOut,
     toast,
     isInZone,
     calculateDistanceKm,
@@ -494,17 +529,20 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
     searchRadiusKm,
   ]);
 
-  const onSliderChange = (value: number[]) => {
-    setSliderValue(value);
-    if (value[0] === 100 && isInZone && !isCheckedIn) handleCheckIn();
-  };
-
+  // Remove the original attemptSync and update the online/offline useEffect
   useEffect(() => {
-    if (typeof navigator !== "undefined" && navigator.onLine) attemptSync();
-    const handleOnline = () => attemptSync();
+    // Check pending logs on mount and when coming back online
+    checkPendingLogs();
+
+    if (typeof navigator !== "undefined" && navigator.onLine)
+      enhancedAttemptSync();
+    const handleOnline = () => {
+      checkPendingLogs();
+      enhancedAttemptSync();
+    };
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
-  }, [attemptSync]);
+  }, [enhancedAttemptSync, checkPendingLogs]);
 
   let statusMessage;
   if (isLoadingPosition || isLoadingSite) {
@@ -520,9 +558,6 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
   } else {
     statusMessage = `You are outside ${geoFenceSite.name}. Move into the geofence to check-in.`;
   }
-
-  const sliderDisabled =
-    !isInZone || isCheckedIn || isLoadingPosition || isLoadingSite || !!error;
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 w-full">
@@ -578,68 +613,86 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
 
           {!isCheckedIn && (
             <div className="space-y-2">
-              <Label htmlFor="checkin-slider" className="text-sm font-medium">
-                {isInZone
-                  ? "Slide to Check-In"
-                  : "Move into geofence to enable check-in"}
-              </Label>
-              <TooltipProvider>
-                <Tooltip
-                  open={
-                    sliderDisabled &&
-                    !isLoadingPosition &&
-                    !isLoadingSite &&
-                    !error &&
-                    !isInZone
-                      ? undefined
-                      : false
-                  }
-                >
-                  <TooltipTrigger asChild>
-                    <div className={sliderDisabled ? "cursor-not-allowed" : ""}>
-                      <Slider
-                        id="checkin-slider"
-                        value={sliderValue}
-                        onValueChange={onSliderChange}
-                        max={100}
-                        step={1}
-                        disabled={sliderDisabled}
-                        className={cn(
-                          "w-full",
-                          sliderDisabled ? "opacity-50" : ""
-                        )}
-                        aria-label="Check-in slider"
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  {sliderDisabled &&
-                    !isLoadingPosition &&
-                    !isLoadingSite &&
-                    !error &&
-                    !isInZone && (
-                      <TooltipContent>
-                        <p>You must be inside the geofence to check-in.</p>
-                      </TooltipContent>
-                    )}
-                </Tooltip>
-              </TooltipProvider>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">
+                  {isInZone
+                    ? "Ready to check in"
+                    : "Move into geofence to enable check-in"}
+                </Label>
+                {isInZone && (
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 text-green-700 border-green-200"
+                  >
+                    Inside Geofence
+                  </Badge>
+                )}
+              </div>
+              <Button
+                onClick={handleCheckIn}
+                disabled={
+                  !isInZone || isLoadingPosition || isLoadingSite || !!error
+                }
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                size="lg"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" /> Check In
+              </Button>
+              {!isInZone && !isLoadingPosition && !isLoadingSite && !error && (
+                <p className="text-xs text-muted-foreground text-center mt-1">
+                  You must be inside the geofence to check-in
+                </p>
+              )}
             </div>
           )}
 
           {isCheckedIn && currentLog && (
-            <Button
-              onClick={handleCheckOut}
-              variant="destructive"
-              className="w-full"
-            >
-              <LogOut className="mr-2 h-4 w-4" /> Check Out
-            </Button>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                  Currently Checked In
+                </Badge>
+                <p className="text-xs text-muted-foreground">
+                  Since {format(new Date(currentLog.checkInTime), "h:mm a")}
+                </p>
+              </div>
+              <Button
+                onClick={handleCheckOut}
+                variant="destructive"
+                className="w-full"
+                size="lg"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Check Out
+              </Button>
+            </div>
           )}
 
           {currentLog && (
             <Card className="mt-4 bg-muted/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Current Shift Summary</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Current Shift Summary</span>
+                  <Badge
+                    variant={
+                      currentLog.syncStatus === "synced"
+                        ? "outline"
+                        : "secondary"
+                    }
+                    className={cn(
+                      currentLog.syncStatus === "synced"
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : currentLog.syncStatus === "failed"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    )}
+                  >
+                    {currentLog.syncStatus === "synced"
+                      ? "Synced"
+                      : currentLog.syncStatus === "failed"
+                      ? "Sync Failed"
+                      : "Pending Sync"}
+                  </Badge>
+                </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-1">
                 <p>
@@ -675,35 +728,60 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
                     minutes
                   </p>
                 )}
-                <p>
-                  <strong>Sync Status:</strong>{" "}
-                  <span
-                    className={cn(
-                      currentLog.syncStatus === "synced"
-                        ? "text-green-600"
-                        : "text-orange-500",
-                      "capitalize"
+                {currentLog.syncStatus !== "synced" && (
+                  <div className="pt-2">
+                    <Button
+                      onClick={() => enhancedAttemptSync()}
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      disabled={
+                        isSyncing ||
+                        (typeof navigator !== "undefined" && !navigator.onLine)
+                      }
+                    >
+                      {isSyncing ? (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-2 h-3 w-3" />
+                      )}
+                      {isSyncing ? "Syncing..." : "Retry Sync"}
+                    </Button>
+                    {typeof navigator !== "undefined" && !navigator.onLine && (
+                      <p className="text-xs text-amber-600 mt-1 text-center">
+                        You are offline. Will sync when back online.
+                      </p>
                     )}
-                  >
-                    {currentLog.syncStatus}
-                  </span>
-                </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-2">
           <Button
-            onClick={attemptSync}
-            disabled={isSyncing}
-            variant="outline"
+            onClick={enhancedAttemptSync}
+            disabled={isSyncing || pendingLogsCount === 0}
+            variant={pendingLogsCount > 0 ? "default" : "outline"}
             className="w-full"
           >
             {isSyncing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}{" "}
-            Sync Now
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {isSyncing
+              ? "Syncing..."
+              : pendingLogsCount > 0
+              ? `Sync Now (${pendingLogsCount} pending)`
+              : "All Synced"}
           </Button>
+
+          {typeof navigator !== "undefined" && !navigator.onLine && (
+            <p className="text-xs text-amber-600 text-center">
+              You are offline. Connect to the internet to sync.
+            </p>
+          )}
         </CardFooter>
       </Card>
 
@@ -793,6 +871,32 @@ export function GeoFenceCheckIn({ siteId, userId }: GeoFenceCheckInProps) {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={showAutoCheckoutDialog}
+        onOpenChange={setShowAutoCheckoutDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Auto Check-Out</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have left the {geoFenceSite?.name} geofence. Would you like to
+              check out now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay Checked In</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleCheckOut();
+                setShowAutoCheckoutDialog(false);
+              }}
+            >
+              Check Out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

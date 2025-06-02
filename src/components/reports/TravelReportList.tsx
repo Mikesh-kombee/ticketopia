@@ -23,9 +23,17 @@ import {
   FileBadge,
   FileWarning,
   Receipt,
-  X
+  X,
 } from "lucide-react";
 import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type SortKey = keyof TravelReport;
 type SortDirection = "asc" | "desc";
@@ -65,6 +73,10 @@ export function TravelReportList({
 }: TravelReportListProps) {
   const [sortBy, setSortBy] = useState<SortKey>("submissionDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectedReport, setSelectedReport] = useState<TravelReport | null>(
+    null
+  );
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
   const sortedReports = [...reports].sort((a, b) => {
     if (a[sortBy] === undefined || b[sortBy] === undefined) return 0;
@@ -196,7 +208,14 @@ export function TravelReportList({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedReport(report);
+                            setIsViewDialogOpen(true);
+                          }}
+                        >
                           View
                         </Button>
                         {isAdmin && report.status === "Pending" && (
@@ -231,6 +250,121 @@ export function TravelReportList({
             </Table>
           </div>
         )}
+
+        {/* Report View Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            {selectedReport && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    Travel Expense Report
+                  </DialogTitle>
+                  <DialogDescription>
+                    Submitted on{" "}
+                    {format(parseISO(selectedReport.submissionDate), "PPP")}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-y-2">
+                    <div className="font-medium">Employee</div>
+                    <div>{selectedReport.employeeName}</div>
+
+                    <div className="font-medium">Travel Area</div>
+                    <div>{selectedReport.travelArea}</div>
+
+                    <div className="font-medium">Expense Type</div>
+                    <div className="flex items-center gap-1">
+                      <span>
+                        {expenseTypeIcons[selectedReport.expenseType]}
+                      </span>
+                      <span>{selectedReport.expenseType}</span>
+                    </div>
+
+                    <div className="font-medium">Amount</div>
+                    <div className="font-semibold">
+                      {selectedReport.currency} {selectedReport.cost.toFixed(2)}
+                    </div>
+
+                    <div className="font-medium">Status</div>
+                    <div>
+                      <Badge
+                        variant="secondary"
+                        className={statusColors[selectedReport.status]}
+                      >
+                        <div className="flex items-center gap-1">
+                          {statusIcons[selectedReport.status]}
+                          <span>{selectedReport.status}</span>
+                        </div>
+                      </Badge>
+                    </div>
+
+                    <div className="font-medium">Vehicle Used</div>
+                    <div className="capitalize">
+                      {selectedReport.vehicleUsed.replace("_", " ")}
+                    </div>
+
+                    {selectedReport.notes && (
+                      <>
+                        <div className="font-medium">Notes</div>
+                        <div>{selectedReport.notes}</div>
+                      </>
+                    )}
+
+                    {selectedReport.receiptUrl && (
+                      <>
+                        <div className="font-medium">Receipt</div>
+                        <div>
+                          <a
+                            href={selectedReport.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1"
+                          >
+                            <Receipt className="h-4 w-4" /> View Receipt
+                          </a>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  {isAdmin && selectedReport.status === "Pending" && (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          onUpdateStatus(selectedReport.id, "Approved");
+                          setIsViewDialogOpen(false);
+                        }}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="h-4 w-4 mr-1" /> Approve
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          onUpdateStatus(selectedReport.id, "Rejected");
+                          setIsViewDialogOpen(false);
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-1" /> Reject
+                      </Button>
+    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

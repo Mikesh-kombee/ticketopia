@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EngineerStatus } from "@/lib/types";
+import { SURAT_CENTER } from "@/hooks/use-google-maps-api";
 import { ChevronDown, Filter, MapPin, RefreshCw, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -50,7 +51,7 @@ export default function LiveMapPage() {
 
   // Mock locations for the map display
   const mockLocations = [
-    { id: "1", lat: 21.1702, lng: 72.8311 }, // Surat Municipal Corporation
+    { id: "1", lat: SURAT_CENTER.lat, lng: SURAT_CENTER.lng }, // Surat Municipal Corporation
     { id: "2", lat: 21.2167, lng: 72.8667 }, // Varachha Diamond Market
     { id: "3", lat: 21.19, lng: 72.79 }, // Adajan Area
     { id: "4", lat: 21.195, lng: 72.845 }, // City Light Area
@@ -348,7 +349,12 @@ export default function LiveMapPage() {
 
                       {/* Mock map with engineer markers */}
                       <div className="mt-6 border border-dashed border-muted-foreground rounded-md p-4 mx-auto max-w-md relative h-64">
-                        <div className="absolute inset-0 opacity-10 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=21.1702,72.8311&zoom=12&size=600x400&key=YOUR_API_KEY')] bg-cover bg-center"></div>
+                        <div
+                          className="absolute inset-0 opacity-10 bg-cover bg-center"
+                          style={{
+                            backgroundImage: `url('https://maps.googleapis.com/maps/api/staticmap?center=${SURAT_CENTER.lat},${SURAT_CENTER.lng}&zoom=12&size=600x400&key=YOUR_API_KEY')`,
+                          }}
+                        ></div>
 
                         {/* City names */}
                         <div className="absolute top-1/4 left-1/4 text-xs font-medium">

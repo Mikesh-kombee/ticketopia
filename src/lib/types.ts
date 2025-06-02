@@ -1,7 +1,7 @@
-export type Coordinates = {
+export interface Coordinates {
   lat: number;
   lng: number;
-};
+}
 
 export type IssueType =
   | "Plumbing"
@@ -37,32 +37,30 @@ export interface Ticket {
   address: string;
   coordinates?: Coordinates;
   issueType: IssueType;
-  notes: string;
+  notes?: string;
   photoFileName?: string;
   assignedEngineerId?: string;
   status: TicketStatus;
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
-  priority?: TicketPriority; // Added for dashboard
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Engineer {
   id: string;
   name: string;
   location: Coordinates;
-  specialization: IssueType[];
-  etaMinutes?: number;
-  etaExplanation?: string;
-  status?: EngineerStatus; // Added for dashboard
-  avatar?: string; // Added for dashboard
-  distanceKm?: number; // For nearby engineers feature
+  specialization: string[];
+  avatar?: string;
+  status?: "Active" | "On Route" | "On Break" | "Offline";
+  currentTask?: string;
+  distanceKm?: number;
 }
 
 export interface TicketFormValues {
   customerName: string;
   address: string;
   issueType: IssueType;
-  notes: string;
+  notes?: string;
   photo?: FileList;
   assignedEngineerId?: string;
 }
@@ -105,16 +103,17 @@ export const alertStatuses: AlertStatus[] = ["new", "reviewed", "dismissed"];
 
 export interface Alert {
   id: string;
-  timestamp: string; // ISO string
-  type: AlertType;
-  severity: AlertSeverity;
-  engineerId: string;
+  type: string;
   engineerName: string;
+  timestamp: string;
+  severity: "high" | "medium" | "low" | "info";
+  status: "new" | "reviewed" | "dismissed";
+  alertId: string;
+  engineerId: string;
   location: Coordinates;
   locationSnippet: string;
-  details?: string;
-  routeTrace?: Coordinates[];
-  status: AlertStatus;
+  details: string;
+  routeTrace?: RoutePoint[];
   notifications: {
     push: boolean;
     email: boolean;
@@ -263,5 +262,50 @@ export interface TravelReportFormInput {
   notes?: string;
 }
 
-// Types for DashboardHomePage component data (mock data for now)
-// export type EngineerStatus = // This line is commented out to resolve the linting error
+export interface ExpenseSubmission {
+  id: string;
+  userId: string;
+  userName: string;
+  submissionDate: string; // YYYY-MM-DD
+  distance: number;
+  toll: number;
+  vehicleType: string;
+  totalCost: number;
+  status: "Pending" | "Approved" | "Rejected";
+  notes?: string;
+}
+
+export interface RateConfig {
+  id: string;
+  userId: string;
+  userName: string;
+  vehicleType: string;
+  ratePerKm: number;
+}
+
+export interface Geofence {
+  id: string;
+  name: string;
+  center: {
+    lat: number;
+    lng: number;
+  };
+  radius: number; // in meters
+  type: "office" | "site" | "restricted" | "other";
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string; // admin user ID
+}
+
+export interface GeofenceLog {
+  id: string;
+  geofenceId: string;
+  engineerId: string;
+  timestamp: string;
+  eventType: "entry" | "exit";
+  location: {
+    lat: number;
+    lng: number;
+  };
+}

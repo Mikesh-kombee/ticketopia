@@ -56,7 +56,7 @@ const fetchReportsFromAPI = async (): Promise<TravelReport[]> => {
         travelArea: submission.notes?.split(" to ")?.[1] || "Downtown",
         expenseType: "Fuel" as ExpenseType, // Default to Fuel for all initial records
         cost: submission.totalCost,
-        currency: "USD",
+        currency: "INR",
         submissionDate: new Date(
           submission.submissionDate + "T10:00:00Z"
         ).toISOString(),

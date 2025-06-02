@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGoogleMapsApi } from "@/hooks/use-google-maps-api";
+import { useGoogleMapsApi, SURAT_CENTER } from "@/hooks/use-google-maps-api";
 import { getCachedRoute, setCachedRoute, clearOldCache } from "@/lib/indexeddb";
 import type { RoutePoint, RouteStop, Engineer } from "@/lib/types";
 import { format, parseISO } from "date-fns";
@@ -229,7 +229,7 @@ export default function RoutePlaybackPage() {
     if (isMapsApiLoaded && mapRef.current && !mapInstanceRef.current) {
       mapInstanceRef.current = new google.maps.Map(mapRef.current, {
         zoom: 13,
-        center: { lat: 21.1702, lng: 72.8311 }, // Default to Surat
+        center: SURAT_CENTER,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         styles: [
           {
@@ -287,6 +287,12 @@ export default function RoutePlaybackPage() {
     if (!mapInstanceRef.current || !isMapsApiLoaded || routeData.length === 0) {
       if (routeData.length > 0 && !mapInstanceRef.current) {
         console.warn("Map instance not ready for drawing route.");
+      }
+
+      // If map exists but no route data, center on Surat
+      if (mapInstanceRef.current && routeData.length === 0) {
+        mapInstanceRef.current.setCenter(SURAT_CENTER);
+        mapInstanceRef.current.setZoom(13);
       }
       return;
     }
@@ -354,8 +360,8 @@ export default function RoutePlaybackPage() {
     if (routeData.length > 0 && !bounds.isEmpty()) {
       map.fitBounds(bounds);
     } else if (routeData.length === 0 && mapRef.current) {
-      // No data, reset view
-      map.setCenter({ lat: 21.1702, lng: 72.8311 });
+      // No data, reset view to Surat
+      map.setCenter(SURAT_CENTER);
       map.setZoom(13);
     }
   }, [isMapsApiLoaded, routeData, stops, clearMapObjects]);
