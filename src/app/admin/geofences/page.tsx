@@ -35,9 +35,10 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { MapPinned, Plus, Trash2, Edit2 } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GeofenceManagementPage() {
+  const { toast } = useToast();
   const { isLoaded: isMapsApiLoaded, error: mapsApiError } = useGoogleMapsApi();
   const [geofences, setGeofences] = useState<Geofence[]>([]);
   const [selectedGeofence, setSelectedGeofence] = useState<Geofence | null>(
@@ -140,7 +141,11 @@ export default function GeofenceManagementPage() {
         const data = await getGeofences();
         setGeofences(data);
       } catch (error) {
-        toast.error("Failed to load geofences");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load geofences",
+        });
         console.error(error);
       }
     };
@@ -193,18 +198,28 @@ export default function GeofenceManagementPage() {
     try {
       if (isEditing && selectedGeofence) {
         await updateGeofence(selectedGeofence.id, formData);
-        toast.success("Geofence updated successfully");
+        toast({
+          title: "Success",
+          description: "Geofence updated successfully",
+        });
       } else {
         await createGeofence({
           ...formData,
           createdBy: "admin", // TODO: Get actual admin ID
         });
-        toast.success("Geofence created successfully");
+        toast({
+          title: "Success",
+          description: "Geofence created successfully",
+        });
       }
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
-      toast.error("Failed to save geofence");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save geofence",
+      });
       console.error(error);
     }
   };
@@ -226,9 +241,16 @@ export default function GeofenceManagementPage() {
     if (window.confirm("Are you sure you want to delete this geofence?")) {
       try {
         await deleteGeofence(id);
-        toast.success("Geofence deleted successfully");
+        toast({
+          title: "Success",
+          description: "Geofence deleted successfully",
+        });
       } catch (error) {
-        toast.error("Failed to delete geofence");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete geofence",
+        });
         console.error(error);
       }
     }
