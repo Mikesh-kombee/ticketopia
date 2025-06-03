@@ -3,10 +3,15 @@
  * This file should only be imported in server components or server actions
  */
 
+import { config } from "dotenv";
+import { resolve } from "path";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { getStorage } from "firebase-admin/storage";
+
+// Load environment variables from .env file
+config({ path: resolve(process.cwd(), ".env") });
 
 // Initialize Firebase Admin SDK for server-side operations
 function initializeFirebaseAdmin() {

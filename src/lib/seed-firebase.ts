@@ -7,6 +7,12 @@
  * Usage: npx tsx src/lib/seed-firebase.ts
  */
 
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load environment variables from .env file
+config({ path: resolve(process.cwd(), ".env") });
+
 import { db } from "./firebase/server";
 import * as fs from "fs";
 import * as path from "path";
