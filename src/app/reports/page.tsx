@@ -1,17 +1,9 @@
 "use client";
 
 import { PrivateRoute } from "@/components/auth/PrivateRoute";
-import { TravelReportForm } from "@/components/reports/TravelReportForm";
-import { TravelReportList } from "@/components/reports/TravelReportList";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -19,323 +11,377 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
-import db from "@/lib/db.json";
 import {
-  ExpenseType,
-  ReportStatus,
-  TravelReport,
-  TravelReportFormInput,
-  VehicleType,
-} from "@/lib/types";
-import { MapPin, PlusCircle, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { db } from "@/lib/firebase/client";
+import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { Clock, FileDown, FileText, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
-// Storage key for local persistence
-const MOCK_REPORTS_KEY = "ticketopia_travel_reports";
+interface EngineerPerformance {
+  id: string;
+  name: string;
+  totalDistance: number;
+  totalHours: number;
+  nightShiftHours: number;
+  safetyAlerts: number;
+  geofenceBreaches: number;
+  averageSpeed: number;
+  lastActive: string;
+}
 
-// Mock API functions (replace with actual API calls)
-const fetchReportsFromAPI = async (): Promise<TravelReport[]> => {
-  console.log("Fetching reports from API (mock)");
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+interface MonthlyHours {
+  id: string;
+  name: string;
+  regularHours: number;
+  nightShiftHours: number;
+  overtimeHours: number;
+  totalHours: number;
+}
 
-  // Try to get from localStorage first
-  const localData = localStorage.getItem(MOCK_REPORTS_KEY);
-
-  if (localData) {
-    return JSON.parse(localData);
-  } else {
-    // Initialize with db.json data if nothing exists in localStorage
-    const mockReports: TravelReport[] = (db.expenseSubmissions || []).map(
-      (submission) => ({
-        id: submission.id,
-        employeeId: submission.userId,
-        employeeName: submission.userName,
-        vehicleUsed: mapVehicleType(submission.vehicleType),
-        travelArea: submission.notes?.split(" to ")?.[1] || "Downtown",
-        expenseType: "Fuel" as ExpenseType, // Default to Fuel for all initial records
-        cost: submission.totalCost,
-        currency: "INR",
-        submissionDate: new Date(
-          submission.submissionDate + "T10:00:00Z"
-        ).toISOString(),
-        status: submission.status as ReportStatus,
-        notes: submission.notes,
-      })
-    );
-
-    localStorage.setItem(MOCK_REPORTS_KEY, JSON.stringify(mockReports));
-    return mockReports;
-  }
-};
-
-// Helper function to map vehicle types
-const mapVehicleType = (type: string): VehicleType => {
-  switch (type) {
-    case "Two Wheeler":
-      return "bike";
-    case "Four Wheeler":
-      return "car";
-    case "Public Transport":
-      return "public_transport";
-    default:
-      return "other";
-  }
-};
-
-const saveReportToAPI = async (report: TravelReport): Promise<TravelReport> => {
-  console.log("Saving report to API (mock):", report);
-  // Simulate API delay and ID generation
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  const newReport = { ...report, id: report.id || crypto.randomUUID() }; // Ensure ID
-
-  // Persist to localStorage
-  const existingReports = await fetchReportsFromAPI();
-  const updatedReports = [
-    ...existingReports.filter((r) => r.id !== newReport.id),
-    newReport,
-  ];
-  localStorage.setItem(MOCK_REPORTS_KEY, JSON.stringify(updatedReports));
-  return newReport;
-};
-
-const updateReportStatusAPI = async (
-  reportId: string,
-  status: ReportStatus
-): Promise<TravelReport | null> => {
-  console.log(`Updating report ${reportId} status to ${status} (mock)`);
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  const existingReports = await fetchReportsFromAPI();
-  const reportIndex = existingReports.findIndex((r) => r.id === reportId);
-  if (reportIndex > -1) {
-    existingReports[reportIndex].status = status;
-    localStorage.setItem(MOCK_REPORTS_KEY, JSON.stringify(existingReports));
-    return existingReports[reportIndex];
-  }
-  return null;
-};
-
-export default function TravelReportsPage() {
-  const { user } = useAuth();
-  const [reports, setReports] = useState<TravelReport[]>([]);
-  const [filteredReports, setFilteredReports] = useState<TravelReport[]>([]);
+export default function ReportsPage() {
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    format(new Date(), "yyyy-MM")
+  );
+  const [engineerPerformance, setEngineerPerformance] = useState<
+    EngineerPerformance[]
+  >([]);
+  const [monthlyHours, setMonthlyHours] = useState<MonthlyHours[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterArea, setFilterArea] = useState("all_areas");
-  const [filterEmployee, setFilterEmployee] = useState("all_employees");
-  // TODO: Add date range filter state
-
-  const isAdmin = user?.role === "admin";
-
-  const loadReports = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const fetchedReports = await fetchReportsFromAPI();
-      setReports(
-        fetchedReports.sort(
-          (a, b) =>
-            new Date(b.submissionDate).getTime() -
-            new Date(a.submissionDate).getTime()
-        )
-      );
-    } catch (error) {
-      console.error("Failed to load reports:", error);
-      // TODO: Show toast error
-    }
-    setIsLoading(false);
-  }, []);
 
   useEffect(() => {
-    loadReports();
-  }, [loadReports]);
+    const fetchReports = async () => {
+      setIsLoading(true);
+      try {
+        // Get the start and end dates for the selected month
+        const startDate = startOfMonth(parseISO(selectedMonth + "-01"));
+        const endDate = endOfMonth(startDate);
 
-  useEffect(() => {
-    let currentReports = [...reports];
-    if (searchTerm) {
-      currentReports = currentReports.filter(
-        (report) =>
-          report.employeeName
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          report.travelArea.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.expenseType.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (filterArea && filterArea !== "all_areas") {
-      currentReports = currentReports.filter((report) =>
-        report.travelArea.toLowerCase().includes(filterArea.toLowerCase())
-      );
-    }
-    if (filterEmployee && filterEmployee !== "all_employees") {
-      currentReports = currentReports.filter((report) =>
-        report.employeeName.toLowerCase().includes(filterEmployee.toLowerCase())
-      );
-    }
-    // TODO: Implement date range filter logic
-
-    setFilteredReports(currentReports);
-  }, [reports, searchTerm, filterArea, filterEmployee]);
-
-  const handleFormSubmit = async (data: TravelReportFormInput) => {
-    if (!user) {
-      // TODO: Show error toast - user not found
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const newReport: TravelReport = {
-        id: crypto.randomUUID(), // Temporary ID, backend should generate
-        employeeId: user.id,
-        employeeName: user.name,
-        vehicleUsed: data.vehicleUsed,
-        travelArea: data.travelArea,
-        expenseType: data.expenseType,
-        cost: parseFloat(data.cost),
-        currency: "INR", // Use Indian Rupees
-        receiptUrl:
-          data.receipt && data.receipt.length > 0
-            ? URL.createObjectURL(data.receipt[0])
-            : undefined, // Mock URL
-        submissionDate: new Date().toISOString(),
-        status: "Pending",
-        notes: data.notes,
-      };
-      const savedReport = await saveReportToAPI(newReport);
-      setReports((prev) =>
-        [savedReport, ...prev].sort(
-          (a, b) =>
-            new Date(b.submissionDate).getTime() -
-            new Date(a.submissionDate).getTime()
-        )
-      );
-      setIsFormOpen(false);
-      // TODO: Show success toast
-    } catch (error) {
-      console.error("Failed to submit report:", error);
-      // TODO: Show error toast
-    }
-    setIsSubmitting(false);
-  };
-
-  const handleStatusUpdate = async (reportId: string, status: ReportStatus) => {
-    try {
-      const updatedReport = await updateReportStatusAPI(reportId, status);
-      if (updatedReport) {
-        setReports((prevReports) =>
-          prevReports.map((r) => (r.id === reportId ? updatedReport : r))
+        // Fetch route data for engineer performance
+        const routeDataRef = collection(db, "routeData");
+        const routeQuery = query(
+          routeDataRef,
+          where("timestamp", ">=", startDate),
+          where("timestamp", "<=", endDate),
+          orderBy("timestamp", "desc")
         );
+        const routeSnapshot = await getDocs(routeQuery);
+
+        // Process route data to calculate performance metrics
+        const performanceMap = new Map<string, EngineerPerformance>();
+        routeSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const engineerId = data.engineerId;
+
+          if (!performanceMap.has(engineerId)) {
+            performanceMap.set(engineerId, {
+              id: engineerId,
+              name: data.engineerName,
+              totalDistance: 0,
+              totalHours: 0,
+              nightShiftHours: 0,
+              safetyAlerts: 0,
+              geofenceBreaches: 0,
+              averageSpeed: 0,
+              lastActive: data.timestamp.toDate().toISOString(),
+            });
+          }
+
+          const performance = performanceMap.get(engineerId)!;
+          performance.totalDistance += data.distance || 0;
+          performance.averageSpeed =
+            (performance.averageSpeed + data.speed) / 2;
+        });
+
+        setEngineerPerformance(Array.from(performanceMap.values()));
+
+        // Fetch attendance data for monthly hours
+        const attendanceRef = collection(db, "attendance");
+        const attendanceQuery = query(
+          attendanceRef,
+          where("date", ">=", startDate),
+          where("date", "<=", endDate)
+        );
+        const attendanceSnapshot = await getDocs(attendanceQuery);
+
+        // Process attendance data to calculate monthly hours
+        const hoursMap = new Map<string, MonthlyHours>();
+        attendanceSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const engineerId = data.engineerId;
+
+          if (!hoursMap.has(engineerId)) {
+            hoursMap.set(engineerId, {
+              id: engineerId,
+              name: data.engineerName,
+              regularHours: 0,
+              nightShiftHours: 0,
+              overtimeHours: 0,
+              totalHours: 0,
+            });
+          }
+
+          const hours = hoursMap.get(engineerId)!;
+          hours.regularHours += data.regularHours || 0;
+          hours.nightShiftHours += data.nightShiftHours || 0;
+          hours.overtimeHours += data.overtimeHours || 0;
+          hours.totalHours =
+            hours.regularHours + hours.nightShiftHours + hours.overtimeHours;
+        });
+
+        setMonthlyHours(Array.from(hoursMap.values()));
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to update report status:", error);
-      // TODO: Show error toast
-    }
+    };
+
+    fetchReports();
+  }, [selectedMonth]);
+
+  const handleExportCSV = () => {
+    // TODO: Implement CSV export
   };
 
-  const uniqueTravelAreas = Array.from(
-    new Set(reports.map((r) => r.travelArea))
-  );
-  const uniqueEmployeeNames = Array.from(
-    new Set(reports.map((r) => r.employeeName))
-  );
+  const handleExportPDF = () => {
+    // TODO: Implement PDF export
+  };
 
   return (
     <PrivateRoute>
-      <div className="container mx-auto p-4 md:p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Travel & Expense Reports
-              </h1>
-            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
             <p className="text-muted-foreground">
-              Manage and submit your travel expenses.
+              View and export engineer performance reports
             </p>
           </div>
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <PlusCircle className="mr-2 h-4 w-4" /> New Report
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] md:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Submit New Expense Report</DialogTitle>
-              </DialogHeader>
-              <TravelReportForm
-                onSubmit={handleFormSubmit}
-                isSubmitting={isSubmitting}
-                defaultValues={{
-                  employeeName: user?.name || "",
-                  vehicleUsed: "car" as VehicleType,
-                  expenseType: "Fuel" as ExpenseType,
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Filter and Search Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded-lg bg-card">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search reports..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select month" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  return (
+                    <SelectItem
+                      key={format(date, "yyyy-MM")}
+                      value={format(date, "yyyy-MM")}
+                    >
+                      {format(date, "MMMM yyyy")}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={handleExportCSV}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF}>
+              <FileText className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
           </div>
-          <Select value={filterArea} onValueChange={setFilterArea}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by Travel Area" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all_areas">All Areas</SelectItem>
-              {uniqueTravelAreas.map((area) => (
-                <SelectItem key={area} value={area}>
-                  {area}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterEmployee} onValueChange={setFilterEmployee}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by Employee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all_employees">All Employees</SelectItem>
-              {uniqueEmployeeNames.map((name) => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {/* TODO: Date Range Picker */}
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchTerm("");
-              setFilterArea("all_areas");
-              setFilterEmployee("all_employees"); /* Reset date filter */
-            }}
-          >
-            Clear Filters
-          </Button>
         </div>
 
-        <TravelReportList
-          reports={filteredReports}
-          isLoading={isLoading}
-          isAdmin={isAdmin}
-          onUpdateStatus={handleStatusUpdate}
-        />
+        {/* Engineer Performance Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Engineer Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Engineer</TableHead>
+                    <TableHead>Total Distance</TableHead>
+                    <TableHead>Total Hours</TableHead>
+                    <TableHead>Night Shifts</TableHead>
+                    <TableHead>Safety Alerts</TableHead>
+                    <TableHead>Geofence Breaches</TableHead>
+                    <TableHead>Avg. Speed</TableHead>
+                    <TableHead>Last Active</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    // Loading skeleton rows
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-24 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : engineerPerformance.length > 0 ? (
+                    engineerPerformance.map((engineer) => (
+                      <TableRow key={engineer.id}>
+                        <TableCell className="font-medium">
+                          {engineer.name}
+                        </TableCell>
+                        <TableCell>
+                          {(engineer.totalDistance / 1000).toFixed(1)} km
+                        </TableCell>
+                        <TableCell>{engineer.totalHours.toFixed(1)}h</TableCell>
+                        <TableCell>
+                          {engineer.nightShiftHours.toFixed(1)}h
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              engineer.safetyAlerts > 0
+                                ? "destructive"
+                                : "secondary"
+                            }
+                          >
+                            {engineer.safetyAlerts}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              engineer.geofenceBreaches > 0
+                                ? "destructive"
+                                : "secondary"
+                            }
+                          >
+                            {engineer.geofenceBreaches}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {engineer.averageSpeed.toFixed(1)} km/h
+                        </TableCell>
+                        <TableCell>
+                          {format(parseISO(engineer.lastActive), "PPp")}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={8}
+                        className="text-center h-24 text-muted-foreground"
+                      >
+                        No performance data available for the selected month
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Monthly Hours Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Monthly Hours Worked
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Engineer</TableHead>
+                    <TableHead>Regular Hours</TableHead>
+                    <TableHead>Night Shifts</TableHead>
+                    <TableHead>Overtime</TableHead>
+                    <TableHead>Total Hours</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    // Loading skeleton rows
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-24 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : monthlyHours.length > 0 ? (
+                    monthlyHours.map((hours) => (
+                      <TableRow key={hours.id}>
+                        <TableCell className="font-medium">
+                          {hours.name}
+                        </TableCell>
+                        <TableCell>{hours.regularHours.toFixed(1)}h</TableCell>
+                        <TableCell>
+                          {hours.nightShiftHours.toFixed(1)}h
+                        </TableCell>
+                        <TableCell>{hours.overtimeHours.toFixed(1)}h</TableCell>
+                        <TableCell className="font-medium">
+                          {hours.totalHours.toFixed(1)}h
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center h-24 text-muted-foreground"
+                      >
+                        No hours data available for the selected month
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </PrivateRoute>
   );

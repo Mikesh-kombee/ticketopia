@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import db from "@/lib/db.json";
+import { db } from "@/lib/firebase/client";
+import { collection, doc, getDoc } from "firebase/firestore";
 import { IssueType, TicketPriority, TicketStatus } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import {
@@ -78,85 +79,34 @@ export default function TicketDetailPage() {
     const fetchTicket = async () => {
       setIsLoading(true);
       try {
-        // Simulate API call with delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const ticketRef = doc(db, "tickets", ticketId);
+        const ticketDoc = await getDoc(ticketRef);
 
-        // Find ticket in mock DB or create mock data for demo
-        const dbTicket = (db.openTickets || []).find((t) => t.id === ticketId);
-
-        if (dbTicket) {
-          // Enhance the ticket with more details for the detail view
+        if (ticketDoc.exists()) {
+          const ticketData = ticketDoc.data();
           setTicket({
-            ...dbTicket,
-            status: dbTicket.status as TicketStatus,
-            priority: dbTicket.priority as TicketPriority,
-            issueType: dbTicket.issueType as IssueType,
-            assignedEngineerName: "John Doe", // In a real app, you'd fetch this
-            description:
-              "Customer reported issues with water leakage from under the sink. Initial assessment needed to determine the scope of repair required.",
-            location: "123 Main St, Anytown, USA",
-            contactName: "Alice Johnson",
-            contactPhone: "(555) 123-4567",
-            createdDate: "2023-12-14T08:30:00Z",
-            estimatedCompletionDate: "2023-12-16T17:00:00Z",
-            notes: [
-              {
-                id: "n1",
-                date: "2023-12-15T10:30:00Z",
-                author: "John Doe",
-                content:
-                  "Initial assessment complete. Need to replace the water valve and fix pipe connection.",
-              },
-              {
-                id: "n2",
-                date: "2023-12-15T11:15:00Z",
-                author: "System",
-                content:
-                  "Ticket status updated from 'Pending' to 'In Progress'.",
-              },
-            ],
-            attachments: [
-              {
-                id: "a1",
-                name: "initial_photo.jpg",
-                url: "/mock/images/plumbing_issue.jpg",
-                type: "image/jpeg",
-                uploadDate: "2023-12-15T09:45:00Z",
-              },
-            ],
-          });
+            id: ticketDoc.id,
+            ...ticketData,
+            lastUpdate: ticketData.lastUpdate.toDate().toISOString(),
+            createdDate: ticketData.createdDate?.toDate().toISOString(),
+            estimatedCompletionDate: ticketData.estimatedCompletionDate
+              ?.toDate()
+              .toISOString(),
+            notes: ticketData.notes?.map((note: any) => ({
+              ...note,
+              date: note.date.toDate().toISOString(),
+            })),
+            attachments: ticketData.attachments?.map((attachment: any) => ({
+              ...attachment,
+              uploadDate: attachment.uploadDate.toDate().toISOString(),
+            })),
+          } as Ticket);
         } else {
-          // Create a mock ticket if not found in DB
-          setTicket({
-            id: ticketId,
-            customerName: "Sample Customer",
-            status: "In Progress",
-            priority: "Medium",
-            assignedEngineerId: "1",
-            assignedEngineerName: "John Doe",
-            issueType: "Plumbing",
-            lastUpdate: "2023-12-15T10:30:00Z",
-            description:
-              "This is a sample ticket description for demonstration purposes.",
-            location: "123 Sample St, Demo City",
-            contactName: "Sample Contact",
-            contactPhone: "(555) 987-6543",
-            createdDate: "2023-12-14T09:00:00Z",
-            estimatedCompletionDate: "2023-12-16T17:00:00Z",
-            notes: [
-              {
-                id: "n1",
-                date: "2023-12-15T10:30:00Z",
-                author: "John Doe",
-                content: "This is a sample note for the ticket.",
-              },
-            ],
-            attachments: [],
-          });
+          setTicket(null);
         }
       } catch (error) {
         console.error("Error fetching ticket:", error);
-        // Handle error appropriately
+        setTicket(null);
       } finally {
         setIsLoading(false);
       }

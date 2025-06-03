@@ -1,6 +1,6 @@
 export interface Coordinates {
-  lat: number;
-  lng: number;
+  latitude: number;
+  longitude: number;
 }
 
 export type IssueType =
@@ -48,11 +48,9 @@ export interface Ticket {
 export interface Engineer {
   id: string;
   name: string;
-  location: Coordinates;
-  specialization: string[];
   avatar?: string;
-  status?: "Active" | "On Route" | "On Break" | "Offline";
-  currentTask?: string;
+  specialization: string[];
+  location: Coordinates;
   distanceKm?: number;
 }
 
@@ -103,21 +101,22 @@ export const alertStatuses: AlertStatus[] = ["new", "reviewed", "dismissed"];
 
 export interface Alert {
   id: string;
-  type: string;
-  engineerName: string;
-  timestamp: string;
-  severity: "high" | "medium" | "low" | "info";
-  status: "new" | "reviewed" | "dismissed";
-  alertId: string;
+  type: "OverSpeed" | "GeofenceBreach" | "NightRiding";
   engineerId: string;
+  engineerName: string;
   location: Coordinates;
-  locationSnippet: string;
-  details: string;
-  routeTrace?: RoutePoint[];
-  notifications: {
-    push: boolean;
-    email: boolean;
+  timestamp: string;
+  details: {
+    speed?: number;
+    geofenceName?: string;
+    duration?: number;
   };
+  severity: "High" | "Medium" | "Low";
+  status: "Active" | "Resolved";
+  resolvedAt?: string;
+  resolvedBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // --- New Dashboard Specific Types ---
@@ -208,19 +207,23 @@ export interface AttendanceRecordSummary {
 export interface GeoFenceSite {
   id: string;
   name: string;
-  center: Coordinates; // Center of the circular geofence
-  radiusKm: number; // Radius in kilometers
+  center: Coordinates;
+  radiusKm: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AttendanceLog {
-  id?: number; // Auto-incremented by IndexedDB
-  logId: string; // UUID for server-side identification
+  id: string;
+  logId: string;
   siteId: string;
   siteName: string;
-  checkInTime: string; // ISO string
-  checkOutTime?: string; // ISO string
+  userId: string;
+  checkInTime: string;
+  checkOutTime?: string;
   syncStatus: "pending" | "synced" | "failed";
-  userId: string; // Placeholder for user ID
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TravelReportEntry {
@@ -308,4 +311,66 @@ export interface GeofenceLog {
     lat: number;
     lng: number;
   };
+}
+
+export interface RouteData {
+  id: string;
+  engineerId: string;
+  engineerName?: string;
+  date: string;
+  timestamp: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  speed: number;
+  heading?: number;
+  accuracy?: number;
+}
+
+export interface Expense {
+  id: string;
+  engineerId: string;
+  engineerName: string;
+  date: string;
+  amount: number;
+  category: string;
+  description: string;
+  status: "pending" | "approved" | "rejected";
+  receiptUrl?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RouteLogEntry {
+  id: string;
+  engineerId: string;
+  engineerName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  startLocation: Coordinates;
+  endLocation: Coordinates;
+  distanceKm: number;
+  durationMinutes: number;
+  stops: number;
+  status: "completed" | "in_progress" | "cancelled";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Attendance {
+  id: string;
+  userId: string;
+  userName: string;
+  date: string;
+  checkInTime: string;
+  checkOutTime?: string;
+  status: AttendanceStatus;
+  location?: Coordinates;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }

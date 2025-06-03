@@ -9,10 +9,10 @@ import type { Coordinates } from './types';
  */
 export function calculateDistanceKm(coord1: Coordinates, coord2: Coordinates): number {
   const R = 6371; // Radius of the Earth in kilometers
-  const dLat = toRadians(coord2.lat - coord1.lat);
-  const dLon = toRadians(coord2.lng - coord1.lng);
-  const lat1 = toRadians(coord1.lat);
-  const lat2 = toRadians(coord2.lat);
+  const dLat = toRadians(coord2.latitude - coord1.latitude);
+  const dLon = toRadians(coord2.longitude - coord1.longitude);
+  const lat1 = toRadians(coord1.latitude);
+  const lat2 = toRadians(coord2.latitude);
 
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
@@ -39,15 +39,15 @@ export function isPointInPolygon(point: Coordinates, polygon: Coordinates[]): bo
     return false; // A polygon must have at least 3 vertices.
   }
 
-  const x = point.lng; // Use lng for x-coordinate
-  const y = point.lat; // Use lat for y-coordinate
+  const x = point.longitude; // Use lng for x-coordinate
+  const y = point.latitude; // Use lat for y-coordinate
   let inside = false;
 
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].lng;
-    const yi = polygon[i].lat;
-    const xj = polygon[j].lng;
-    const yj = polygon[j].lat;
+    const xi = polygon[i].longitude;
+    const yi = polygon[i].latitude;
+    const xj = polygon[j].longitude;
+    const yj = polygon[j].latitude;
 
     const intersect = ((yi > y) !== (yj > y)) &&
                       (x < (xj - xi) * (y - yi) / (yj - yi) + xi);

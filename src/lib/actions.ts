@@ -66,8 +66,12 @@ export async function getEngineerEta(
 ): Promise<{ etaMinutes?: number; explanation?: string; error?: string }> {
   try {
     // Simple distance-based calculation
-    const latDiff = Math.abs(engineerLocation.lat - ticketLocation.lat);
-    const lngDiff = Math.abs(engineerLocation.lng - ticketLocation.lng);
+    const latDiff = Math.abs(
+      engineerLocation.latitude - ticketLocation.latitude
+    );
+    const lngDiff = Math.abs(
+      engineerLocation.longitude - ticketLocation.longitude
+    );
     const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
 
     // Convert the geometric distance to an approximate ETA in minutes
@@ -76,7 +80,10 @@ export async function getEngineerEta(
     // Record the calculation in the database
     // This is just for auditing purposes
     const engineerId = "unknown"; // In a real app, you'd get this from the engineer object
-    await updateEngineerLocation(engineerId, engineerLocation);
+    await updateEngineerLocation(engineerId, {
+      lat: engineerLocation.latitude,
+      lng: engineerLocation.longitude,
+    });
 
     return {
       etaMinutes,

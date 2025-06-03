@@ -1,36 +1,44 @@
 import type { GeoFenceSite } from "@/lib/types";
 import { NextResponse } from "next/server";
-import db from "@/lib/db.json"; // Import db.json
+import { db } from "@/lib/firebase/client";
+import { doc, getDoc } from "firebase/firestore";
 
 // const mockCircularGeoFences: Record<string, GeoFenceSite> = { ... }; // Removed
 
 type RouteParams = {
-  params: Promise<{
+  params: {
     siteId: string;
-  }>;
+  };
 };
 
 export async function GET(request: Request, { params }: RouteParams) {
-  const { siteId } = await params;
+  const { siteId } = params;
 
   if (!siteId) {
     return NextResponse.json({ error: "Site ID is required" }, { status: 400 });
   }
 
-  // Access circularGeoFences from the imported db.json
-  const geofence = (db.circularGeoFences as Record<string, GeoFenceSite>)[
-    siteId
-  ];
+  try {
+    const geofenceRef = doc(db, "geofences", siteId);
+    const geofenceDoc = await getDoc(geofenceRef);
 
-  if (!geofence) {
+    if (!geofenceDoc.exists()) {
+      return NextResponse.json(
+        { error: "Geofence not found for this site ID" },
+        { status: 404 }
+      );
+    }
+
+    const geofence = {
+      id: geofenceDoc.id,
+      ...geofenceDoc.data(),
+    } as GeoFenceSite;
+    return NextResponse.json(geofence);
+  } catch (error) {
+    console.error("Error fetching geofence:", error);
     return NextResponse.json(
-      { error: "Geofence not found for this site ID" },
-      { status: 404 }
+      { error: "Failed to fetch geofence" },
+      { status: 500 }
     );
   }
-
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  return NextResponse.json(geofence);
 }

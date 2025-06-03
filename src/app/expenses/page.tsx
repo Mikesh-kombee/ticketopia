@@ -1,4 +1,4 @@
-import { ExpenseList } from "@/components/expenses/ExpenseList";
+import  ExpenseList from "@/components/expenses/ExpenseList";
 import { CreditCard } from "lucide-react";
 import { Metadata } from "next";
 

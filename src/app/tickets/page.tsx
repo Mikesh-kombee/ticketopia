@@ -20,7 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import db from "@/lib/db.json";
+import { db } from "@/lib/firebase/client";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { IssueType, TicketPriority, TicketStatus } from "@/lib/types";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import {
@@ -51,12 +52,13 @@ interface TicketData {
 }
 
 type SortableKeys = keyof TicketData;
-type SortDirection = "asc" | "desc";
 
 interface SortConfig {
-  key: SortableKeys | null;
-  direction: SortDirection;
+  key: SortableKeys;
+  direction: "asc" | "desc";
 }
+
+type SortDirection = "asc" | "desc";
 
 const statusColors: Record<TicketStatus | TicketPriority, string> = {
   Pending: "bg-yellow-100 text-yellow-700",
@@ -100,68 +102,18 @@ export default function TicketsPage() {
   const fetchTickets = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const ticketsRef = collection(db, "tickets");
+      const q = query(ticketsRef, orderBy("lastUpdate", "desc"));
+      const querySnapshot = await getDocs(q);
 
-      // In a real app, you'd fetch from an API
-      // Mock data based on dashboard tickets with additional details
-      const baseTickets = db.openTickets || [];
+      const ticketsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        lastUpdate: doc.data().lastUpdate.toDate().toISOString(),
+        createdDate: doc.data().createdDate?.toDate().toISOString(),
+      })) as TicketData[];
 
-      const enhancedTickets: TicketData[] = [
-        ...baseTickets.map((ticket) => ({
-          ...ticket,
-          status: ticket.status as TicketStatus,
-          priority: ticket.priority as TicketPriority,
-          issueType: ticket.issueType as IssueType,
-          assignedEngineerName: `Engineer ${ticket.assignedEngineerId}`, // Mock names
-          createdDate: new Date(
-            new Date(ticket.lastUpdate).getTime() -
-              1000 * 60 * 60 * 24 * Math.floor(Math.random() * 5)
-          ).toISOString(),
-          location: ["Downtown", "Uptown", "Midtown", "Eastside", "Westside"][
-            Math.floor(Math.random() * 5)
-          ],
-        })),
-        // Add more mocked tickets
-        {
-          id: "T006",
-          customerName: "MNO Industries",
-          status: "Completed" as TicketStatus,
-          priority: "Medium" as TicketPriority,
-          assignedEngineerId: "2",
-          assignedEngineerName: "Engineer 2",
-          issueType: "Electrical" as IssueType,
-          lastUpdate: "2023-12-14T15:30:00Z",
-          createdDate: "2023-12-12T09:00:00Z",
-          location: "Downtown",
-        },
-        {
-          id: "T007",
-          customerName: "PQR Solutions",
-          status: "Cancelled" as TicketStatus,
-          priority: "Low" as TicketPriority,
-          assignedEngineerId: "3",
-          assignedEngineerName: "Engineer 3",
-          issueType: "Plumbing" as IssueType,
-          lastUpdate: "2023-12-13T11:45:00Z",
-          createdDate: "2023-12-11T10:15:00Z",
-          location: "Eastside",
-        },
-        {
-          id: "T008",
-          customerName: "STU Corp",
-          status: "Pending" as TicketStatus,
-          priority: "Urgent" as TicketPriority,
-          assignedEngineerId: "1",
-          assignedEngineerName: "Engineer 1",
-          issueType: "HVAC" as IssueType,
-          lastUpdate: "2023-12-15T12:00:00Z",
-          createdDate: "2023-12-15T09:30:00Z",
-          location: "Midtown",
-        },
-      ];
-
-      setTickets(enhancedTickets);
+      setTickets(ticketsData);
     } catch (error) {
       console.error("Error fetching tickets:", error);
     } finally {
@@ -180,34 +132,44 @@ export default function TicketsPage() {
     // Apply search filter
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
-      result = result.filter(
-        (ticket) =>
-          ticket.id.toLowerCase().includes(lowercaseSearch) ||
-          ticket.customerName.toLowerCase().includes(lowercaseSearch) ||
-          ticket.location?.toLowerCase().includes(lowercaseSearch)
-      );
+      result = result.filter((ticket) => {
+        const ticketData = ticket as TicketData;
+        return (
+          ticketData.id.toLowerCase().includes(lowercaseSearch) ||
+          ticketData.customerName.toLowerCase().includes(lowercaseSearch) ||
+          ticketData.location?.toLowerCase().includes(lowercaseSearch)
+        );
+      });
     }
 
     // Apply status filter
     if (statusFilter !== "All") {
-      result = result.filter((ticket) => ticket.status === statusFilter);
+      result = result.filter(
+        (ticket) => (ticket as TicketData).status === statusFilter
+      );
     }
 
     // Apply priority filter
     if (priorityFilter !== "All") {
-      result = result.filter((ticket) => ticket.priority === priorityFilter);
+      result = result.filter(
+        (ticket) => (ticket as TicketData).priority === priorityFilter
+      );
     }
 
     // Apply issue type filter
     if (issueTypeFilter !== "All") {
-      result = result.filter((ticket) => ticket.issueType === issueTypeFilter);
+      result = result.filter(
+        (ticket) => (ticket as TicketData).issueType === issueTypeFilter
+      );
     }
 
     // Apply sorting
     if (sortConfig.key) {
       result.sort((a, b) => {
-        const aValue = a[sortConfig.key!];
-        const bValue = b[sortConfig.key!];
+        const aData = a as TicketData;
+        const bData = b as TicketData;
+        const aValue = aData[sortConfig.key!];
+        const bValue = bData[sortConfig.key!];
 
         if (aValue === undefined || aValue === null) return 1;
         if (bValue === undefined || bValue === null) return -1;
@@ -306,7 +268,7 @@ export default function TicketsPage() {
         </div>
 
         {/* Search and filters */}
-        <div className="flex flex-col gap-4">
+        <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -362,7 +324,7 @@ export default function TicketsPage() {
                         <SelectItem value="All">All Priorities</SelectItem>
                         {uniquePriorities.map((priority) => (
                           <SelectItem key={priority} value={priority}>
-                            {priorityIcons[priority]} {priority}
+                            {priority}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -449,76 +411,11 @@ export default function TicketsPage() {
                           ))}
                       </div>
                     </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => requestSort("status")}
-                    >
-                      <div className="flex items-center">
-                        Status
-                        {sortConfig.key === "status" &&
-                          (sortConfig.direction === "asc" ? (
-                            <ChevronUp className="ml-1 h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="ml-1 h-4 w-4" />
-                          ))}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => requestSort("priority")}
-                    >
-                      <div className="flex items-center">
-                        Priority
-                        {sortConfig.key === "priority" &&
-                          (sortConfig.direction === "asc" ? (
-                            <ChevronUp className="ml-1 h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="ml-1 h-4 w-4" />
-                          ))}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => requestSort("issueType")}
-                    >
-                      <div className="flex items-center">
-                        Issue Type
-                        {sortConfig.key === "issueType" &&
-                          (sortConfig.direction === "asc" ? (
-                            <ChevronUp className="ml-1 h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="ml-1 h-4 w-4" />
-                          ))}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => requestSort("assignedEngineerName")}
-                    >
-                      <div className="flex items-center">
-                        Assigned To
-                        {sortConfig.key === "assignedEngineerName" &&
-                          (sortConfig.direction === "asc" ? (
-                            <ChevronUp className="ml-1 h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="ml-1 h-4 w-4" />
-                          ))}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => requestSort("lastUpdate")}
-                    >
-                      <div className="flex items-center">
-                        Last Updated
-                        {sortConfig.key === "lastUpdate" &&
-                          (sortConfig.direction === "asc" ? (
-                            <ChevronUp className="ml-1 h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="ml-1 h-4 w-4" />
-                          ))}
-                      </div>
-                    </TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Issue Type</TableHead>
+                    <TableHead>Assigned To</TableHead>
+                    <TableHead>Last Update</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
