@@ -322,7 +322,7 @@ export default function GeoFenceManagement() {
       {/* Map */}
       <div className="flex-1">
         <LoadScript
-          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+          googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY!}
         >
           <GoogleMap
             mapContainerStyle={mapContainerStyle}

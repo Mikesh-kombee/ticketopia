@@ -32,7 +32,7 @@ export default function RoutePlaybackDetailPage() {
   const router = useRouter();
   const { isLoaded: isMapsApiLoaded } = useGoogleMapsApi();
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [routeData, setRouteData] = useState<RoutePoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -42,6 +42,7 @@ export default function RoutePlaybackDetailPage() {
   const lastFrameTimeRef = useRef<number>(0);
   const polylineRefs = useRef<google.maps.Polyline[]>([]);
   const movingMarkerRef = useRef<google.maps.Marker | null>(null);
+  const [totalDistanceKm, setTotalDistanceKm] = useState(0);
 
   useEffect(() => {
     async function fetchRouteData() {
@@ -58,10 +59,20 @@ export default function RoutePlaybackDetailPage() {
         );
 
         const querySnapshot = await getDocs(q);
-        const routes = querySnapshot.docs.map((doc) => ({
-          ...doc.data(),
-          timestamp: doc.data().timestamp.toDate().toISOString(),
-        })) as RoutePoint[];
+        const routes = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          const timestamp = data.timestamp;
+          let date;
+          if (timestamp && typeof timestamp.toDate === 'function') {
+            date = timestamp.toDate();
+          } else {
+            date = new Date(timestamp);
+          }
+          return {
+            ...data,
+            timestamp: date.toISOString(),
+          };
+        }) as RoutePoint[];
 
         setRouteData(routes);
       } catch (error) {
@@ -75,70 +86,72 @@ export default function RoutePlaybackDetailPage() {
   }, [params.id]);
 
   useEffect(() => {
-    if (isMapsApiLoaded && mapRef.current && !mapInstanceRef.current) {
-      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-        zoom: 13,
-        center: SURAT_CENTER,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        styles: [
-          {
-            featureType: "all",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }],
-          },
-          {
-            featureType: "landscape",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
-          },
-          {
-            featureType: "landscape.man_made",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#dcdcdc" }],
-          },
-          {
-            featureType: "landscape.natural",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#ececec" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#c9c9c9" }],
-          },
-          {
-            featureType: "road.arterial",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#e5e5e5" }],
-          },
-          {
-            featureType: "road.local",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
-          },
-          {
-            featureType: "water",
-            elementType: "geometry",
-            stylers: [{ visibility: "on" }, { color: "#c9c9c9" }],
-          },
-        ],
-      });
+    if (isMapsApiLoaded && mapRef.current && !mapInstance) {
+      setMapInstance(
+        new google.maps.Map(mapRef.current, {
+          zoom: 13,
+          center: SURAT_CENTER,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          styles: [
+            {
+              featureType: "all",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }],
+            },
+            {
+              featureType: "landscape",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
+            },
+            {
+              featureType: "landscape.man_made",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#dcdcdc" }],
+            },
+            {
+              featureType: "landscape.natural",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#ececec" }],
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#c9c9c9" }],
+            },
+            {
+              featureType: "road.arterial",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#e5e5e5" }],
+            },
+            {
+              featureType: "road.local",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#f2f2f2" }],
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ visibility: "on" }, { color: "#c9c9c9" }],
+            },
+          ],
+        })
+      );
     }
-  }, [isMapsApiLoaded]);
+  }, [isMapsApiLoaded, mapInstance]);
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !isMapsApiLoaded || routeData.length === 0) {
-      if (routeData.length > 0 && !mapInstanceRef.current) {
+    if (!mapInstance || routeData.length === 0) {
+      if (routeData.length > 0 && !mapInstance) {
         console.warn("Map instance not ready for drawing route.");
       }
-      if (mapInstanceRef.current && routeData.length === 0) {
-        mapInstanceRef.current.setCenter(SURAT_CENTER);
-        mapInstanceRef.current.setZoom(13);
+      if (mapInstance && routeData.length === 0) {
+        mapInstance.setCenter(SURAT_CENTER);
+        mapInstance.setZoom(13);
       }
       return;
     }
@@ -151,7 +164,7 @@ export default function RoutePlaybackDetailPage() {
       movingMarkerRef.current = null;
     }
 
-    const map = mapInstanceRef.current;
+    const map = mapInstance;
     const bounds = new google.maps.LatLngBounds();
 
     // Draw route
@@ -197,6 +210,18 @@ export default function RoutePlaybackDetailPage() {
     if (routeData.length > 0 && !bounds.isEmpty()) {
       map.fitBounds(bounds);
     }
+  }, [mapInstance, routeData]);
+
+  useEffect(() => {
+    if (isMapsApiLoaded && routeData.length > 1 && window.google?.maps?.geometry?.spherical) {
+      const distance =
+        window.google.maps.geometry.spherical.computeLength(
+          routeData.map(
+            (p) => new window.google.maps.LatLng(p.location.lat, p.location.lng)
+          )
+        ) / 1000;
+      setTotalDistanceKm(distance);
+    }
   }, [isMapsApiLoaded, routeData]);
 
   useEffect(() => {
@@ -204,7 +229,7 @@ export default function RoutePlaybackDetailPage() {
       !isPlaying ||
       routeData.length < 2 ||
       !movingMarkerRef.current ||
-      !mapInstanceRef.current
+      !mapInstance
     ) {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
@@ -213,7 +238,7 @@ export default function RoutePlaybackDetailPage() {
       return;
     }
 
-    const map = mapInstanceRef.current;
+    const map = mapInstance;
     const marker = movingMarkerRef.current;
 
     let totalRouteTimeMs = 0;
@@ -308,7 +333,7 @@ export default function RoutePlaybackDetailPage() {
     routeData,
     playbackSpeed,
     currentRouteProgress,
-    isMapsApiLoaded,
+    mapInstance,
   ]);
 
   const handlePlayPause = () => {
@@ -344,15 +369,6 @@ export default function RoutePlaybackDetailPage() {
       </div>
     );
   }
-
-  const totalDistanceKm =
-    routeData.length > 1 && window.google
-      ? window.google.maps.geometry.spherical.computeLength(
-          routeData.map(
-            (p) => new window.google.maps.LatLng(p.location.lat, p.location.lng)
-          )
-        ) / 1000
-      : 0;
 
   const totalDuration =
     routeData.length > 1

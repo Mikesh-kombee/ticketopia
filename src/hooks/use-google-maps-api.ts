@@ -76,9 +76,8 @@ export function useGoogleMapsApi() {
         try {
           googleMapsApiKey = await fetchGoogleMapsApiKey();
         } catch (error) {
-          const keyError = new Error(
-            "Failed to fetch Google Maps API key from server."
-          );
+          const keyError =
+            error instanceof Error ? error : new Error(String(error));
           globalMapsApiError = keyError;
           setError(keyError);
           setIsLoading(false);

@@ -149,7 +149,7 @@ export default function AttendanceCheckIn() {
   return (
     <div className="h-[600px] relative">
       <LoadScript
-        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+        googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY!}
       >
         <GoogleMap
           mapContainerStyle={mapContainerStyle}

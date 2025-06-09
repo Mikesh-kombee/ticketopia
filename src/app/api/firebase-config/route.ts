@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export function GET() {
   const config = {
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -10,7 +10,12 @@ export async function GET() {
     appId: process.env.FIREBASE_APP_ID,
   };
 
-  console.log("config", config);
+  if (!config.apiKey) {
+    return NextResponse.json(
+      { error: "Firebase configuration is missing on the server." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json(config);
 }
