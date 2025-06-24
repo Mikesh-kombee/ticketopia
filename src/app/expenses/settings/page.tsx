@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { CostSettingsForm } from "@/components/expenses/CostSettingsForm";
+import CostSettingsForm from "@/components/expenses/CostSettingsForm";
 
 export const metadata: Metadata = {
   title: "Expense Settings | Ticketopia",
