@@ -1,12 +1,24 @@
-import type { DashboardAlertSummary } from "@/lib/types";
 import { NextResponse } from "next/server";
-import db from "@/lib/db.json"; // Import db.json
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
 
 export async function GET() {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  // Filter alerts from db.json
-  const unreadAlerts = (db.alerts as DashboardAlertSummary[]).filter(
-    (a) => a.status === "new"
-  );
-  return NextResponse.json(unreadAlerts);
+  try {
+    const alertsRef = collection(db, "alerts");
+    const q = query(alertsRef, where("read", "==", false));
+    const querySnapshot = await getDocs(q);
+
+    const unreadAlerts = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return NextResponse.json({ unreadAlerts });
+  } catch (error) {
+    console.error("Error fetching unread alerts:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch unread alerts" },
+      { status: 500 }
+    );
+  }
 }

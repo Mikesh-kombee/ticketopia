@@ -1,7 +1,7 @@
-export type Coordinates = {
-  lat: number;
-  lng: number;
-};
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
 export type IssueType =
   | "Plumbing"
@@ -37,32 +37,28 @@ export interface Ticket {
   address: string;
   coordinates?: Coordinates;
   issueType: IssueType;
-  notes: string;
+  notes?: string;
   photoFileName?: string;
   assignedEngineerId?: string;
   status: TicketStatus;
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
-  priority?: TicketPriority; // Added for dashboard
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Engineer {
   id: string;
   name: string;
+  avatar?: string;
+  specialization: string[];
   location: Coordinates;
-  specialization: IssueType[];
-  etaMinutes?: number;
-  etaExplanation?: string;
-  status?: EngineerStatus; // Added for dashboard
-  avatar?: string; // Added for dashboard
-  distanceKm?: number; // For nearby engineers feature
+  distanceKm?: number;
 }
 
 export interface TicketFormValues {
   customerName: string;
   address: string;
   issueType: IssueType;
-  notes: string;
+  notes?: string;
   photo?: FileList;
   assignedEngineerId?: string;
 }
@@ -105,20 +101,22 @@ export const alertStatuses: AlertStatus[] = ["new", "reviewed", "dismissed"];
 
 export interface Alert {
   id: string;
-  timestamp: string; // ISO string
-  type: AlertType;
-  severity: AlertSeverity;
+  type: "OverSpeed" | "GeofenceBreach" | "NightRiding";
   engineerId: string;
   engineerName: string;
   location: Coordinates;
-  locationSnippet: string;
-  details?: string;
-  routeTrace?: Coordinates[];
-  status: AlertStatus;
-  notifications: {
-    push: boolean;
-    email: boolean;
+  timestamp: string;
+  details: {
+    speed?: number;
+    geofenceName?: string;
+    duration?: number;
   };
+  severity: "High" | "Medium" | "Low";
+  status: "Active" | "Resolved";
+  resolvedAt?: string;
+  resolvedBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // --- New Dashboard Specific Types ---
@@ -209,19 +207,23 @@ export interface AttendanceRecordSummary {
 export interface GeoFenceSite {
   id: string;
   name: string;
-  center: Coordinates; // Center of the circular geofence
-  radiusKm: number; // Radius in kilometers
+  center: Coordinates;
+  radiusKm: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AttendanceLog {
-  id?: number; // Auto-incremented by IndexedDB
-  logId: string; // UUID for server-side identification
+  id: string;
+  logId: string;
   siteId: string;
   siteName: string;
-  checkInTime: string; // ISO string
-  checkOutTime?: string; // ISO string
+  userId: string;
+  checkInTime: string;
+  checkOutTime?: string;
   syncStatus: "pending" | "synced" | "failed";
-  userId: string; // Placeholder for user ID
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TravelReportEntry {
@@ -263,5 +265,112 @@ export interface TravelReportFormInput {
   notes?: string;
 }
 
-// Types for DashboardHomePage component data (mock data for now)
-// export type EngineerStatus = // This line is commented out to resolve the linting error
+export interface ExpenseSubmission {
+  id: string;
+  userId: string;
+  userName: string;
+  submissionDate: string; // YYYY-MM-DD
+  distance: number;
+  toll: number;
+  vehicleType: string;
+  totalCost: number;
+  status: "Pending" | "Approved" | "Rejected";
+  notes?: string;
+}
+
+export interface RateConfig {
+  id: string;
+  userId: string;
+  userName: string;
+  vehicleType: string;
+  ratePerKm: number;
+}
+
+export interface Geofence {
+  id: string;
+  name: string;
+  center: {
+    lat: number;
+    lng: number;
+  };
+  radius: number; // in meters
+  type: "office" | "site" | "restricted" | "other";
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string; // admin user ID
+}
+
+export interface GeofenceLog {
+  id: string;
+  geofenceId: string;
+  engineerId: string;
+  timestamp: string;
+  eventType: "entry" | "exit";
+  location: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface RouteData {
+  id: string;
+  engineerId: string;
+  engineerName?: string;
+  date: string;
+  timestamp: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  speed: number;
+  heading?: number;
+  accuracy?: number;
+}
+
+export interface Expense {
+  id: string;
+  engineerId: string;
+  engineerName: string;
+  date: string;
+  amount: number;
+  category: string;
+  description: string;
+  status: "pending" | "approved" | "rejected";
+  receiptUrl?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RouteLogEntry {
+  id: string;
+  engineerId: string;
+  engineerName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  startLocation: Coordinates;
+  endLocation: Coordinates;
+  distanceKm: number;
+  durationMinutes: number;
+  stops: number;
+  status: "completed" | "in_progress" | "cancelled";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Attendance {
+  id: string;
+  userId: string;
+  userName: string;
+  date: string;
+  checkInTime: string;
+  checkOutTime?: string;
+  status: AttendanceStatus;
+  location?: Coordinates;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}

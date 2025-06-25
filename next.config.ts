@@ -1,7 +1,17 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const config: NextConfig = {
+  reactStrictMode: true,
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      net: false,
+      tls: false,
+      fs: false,
+      child_process: false,
+    };
+    return config;
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -11,13 +21,13 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "placehold.co",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;
+export default config;

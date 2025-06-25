@@ -46,3 +46,4 @@ firestore-debug.log
 
 # VS code
 .vscode
+firebase-service-account.json

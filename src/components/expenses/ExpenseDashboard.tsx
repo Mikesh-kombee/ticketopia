@@ -1,172 +1,140 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import db from "@/lib/db.json";
-import {
-  ExpenseStatus,
-  ExpenseSubmission,
-  RateConfig,
-} from "@/lib/types/expense";
-import { useState } from "react";
-import { CostSettingsForm, type FormData } from "./CostSettingsForm";
-import { ExpenseTable } from "./ExpenseTable";
+import { db } from "@/lib/firebase/client";
+import { collection, getDocs } from "firebase/firestore";
+import { useEffect, useState } from "react";
 
-export function ExpenseDashboard() {
-  const [expenses, setExpenses] = useState<ExpenseSubmission[]>(
-    db.expenseSubmissions as ExpenseSubmission[]
-  );
-  const [rateConfigs, setRateConfigs] = useState<RateConfig[]>(
-    db.rateConfigs as RateConfig[]
-  );
-  const [notesDialog, setNotesDialog] = useState({ open: false, content: "" });
-  const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
-    status: "all" as ExpenseStatus | "all",
+interface ExpenseSummary {
+  totalAmount: number;
+  approvedAmount: number;
+  pendingAmount: number;
+  rejectedAmount: number;
+  recentExpenses: {
+    id: string;
+    engineerName: string;
+    amount: number;
+    date: string;
+    status: string;
+  }[];
+}
+
+export default function ExpenseDashboard() {
+  const [summary, setSummary] = useState<ExpenseSummary>({
+    totalAmount: 0,
+    approvedAmount: 0,
+    pendingAmount: 0,
+    rejectedAmount: 0,
+    recentExpenses: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleApprove = (id: string) => {
-    setExpenses(
-      expenses.map((exp) =>
-        exp.id === id ? { ...exp, status: "Approved" as ExpenseStatus } : exp
-      )
-    );
-  };
+  useEffect(() => {
+    async function fetchExpenseSummary() {
+      try {
+        const expensesRef = collection(db, "expenses");
+        const querySnapshot = await getDocs(expensesRef);
 
-  const handleReject = (id: string) => {
-    setExpenses(
-      expenses.map((exp) =>
-        exp.id === id ? { ...exp, status: "Rejected" as ExpenseStatus } : exp
-      )
-    );
-  };
+        let totalAmount = 0;
+        let approvedAmount = 0;
+        let pendingAmount = 0;
+        let rejectedAmount = 0;
+        const recentExpenses: ExpenseSummary["recentExpenses"] = [];
 
-  const handleViewNotes = (notes: string) => {
-    setNotesDialog({ open: true, content: notes });
-  };
+        querySnapshot.docs.forEach((doc) => {
+          const expense = doc.data();
+          const amount = expense.amount || 0;
+          totalAmount += amount;
 
-  const handleRateSubmit = (data: FormData) => {
-    const newConfig: RateConfig = {
-      id: `rate${rateConfigs.length + 1}`,
-      userId: data.userId,
-      userName:
-        (db.users as { id: string; name: string }[]).find(
-          (usr) => usr.id === data.userId
-        )?.name || "",
-      vehicleType: data.vehicleType,
-      ratePerKm: data.ratePerKm,
-    };
-    setRateConfigs([...rateConfigs, newConfig]);
-  };
+          switch (expense.status) {
+            case "approved":
+              approvedAmount += amount;
+              break;
+            case "pending":
+              pendingAmount += amount;
+              break;
+            case "rejected":
+              rejectedAmount += amount;
+              break;
+          }
 
-  const filteredExpenses = expenses.filter((exp) => {
-    const matchesStartDate =
-      !filters.startDate ||
-      new Date(exp.submissionDate) >= new Date(filters.startDate);
-    const matchesEndDate =
-      !filters.endDate ||
-      new Date(exp.submissionDate) <= new Date(filters.endDate);
-    const matchesStatus =
-      filters.status === "all" || exp.status === filters.status;
-    return matchesStartDate && matchesEndDate && matchesStatus;
-  });
+          recentExpenses.push({
+            id: doc.id,
+            engineerName: expense.engineerName,
+            amount: expense.amount,
+            date: expense.date,
+            status: expense.status,
+          });
+        });
+
+        // Sort recent expenses by date
+        recentExpenses.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setSummary({
+          totalAmount,
+          approvedAmount,
+          pendingAmount,
+          rejectedAmount,
+          recentExpenses: recentExpenses.slice(0, 5), // Get only the 5 most recent
+        });
+      } catch (error) {
+        console.error("Error fetching expense summary:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchExpenseSummary();
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading expense summary...</div>;
+  }
 
   return (
-    <div className="container mx-auto py-6">
-      <Tabs defaultValue="expenses" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="expenses">Expense Submissions</TabsTrigger>
-          <TabsTrigger value="settings">Cost Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="expenses">
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Submissions</CardTitle>
-              <div className="flex gap-4 mt-4">
-                <Input
-                  type="date"
-                  placeholder="Start Date"
-                  value={filters.startDate}
-                  onChange={(e) =>
-                    setFilters({ ...filters, startDate: e.target.value })
-                  }
-                />
-                <Input
-                  type="date"
-                  placeholder="End Date"
-                  value={filters.endDate}
-                  onChange={(e) =>
-                    setFilters({ ...filters, endDate: e.target.value })
-                  }
-                />
-                <Select
-                  value={filters.status}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, status: value as ExpenseStatus })
-                  }
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ExpenseTable
-                expenses={filteredExpenses}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onViewNotes={handleViewNotes}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cost Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CostSettingsForm onSubmit={handleRateSubmit} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <Dialog
-        open={notesDialog.open}
-        onOpenChange={(open) => setNotesDialog({ ...notesDialog, open })}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Notes</DialogTitle>
-          </DialogHeader>
-          <p>{notesDialog.content}</p>
-        </DialogContent>
-      </Dialog>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            ₹{summary.totalAmount.toFixed(2)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Approved</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-green-600">
+            ₹{summary.approvedAmount.toFixed(2)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Pending</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-yellow-600">
+            ₹{summary.pendingAmount.toFixed(2)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-red-600">
+            ₹{summary.rejectedAmount.toFixed(2)}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

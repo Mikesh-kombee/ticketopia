@@ -1,14 +1,24 @@
+import { db } from "@/lib/firebase/client";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import type { OpenTicketSummary } from "@/lib/types";
-// import { ticketStatuses, ticketPriorities } from "@/lib/types"; // No longer needed
-import db from "@/lib/db.json"; // Import db.json
-
-// const mockOpenTickets: OpenTicketSummary[] = [ ... ]; // Removed
 
 export async function GET() {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  // const updatedTickets = mockOpenTickets.map( ... ); // Removed dynamic update logic
+  try {
+    const ticketsRef = collection(db, "tickets");
+    const q = query(ticketsRef, where("status", "in", ["open", "in_progress"]));
+    const querySnapshot = await getDocs(q);
 
-  // Return data from db.json
-  return NextResponse.json(db.dashboardOpenTickets as OpenTicketSummary[]);
+    const openTickets = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return NextResponse.json({ openTickets });
+  } catch (error) {
+    console.error("Error fetching open tickets:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch open tickets" },
+      { status: 500 }
+    );
+  }
 }

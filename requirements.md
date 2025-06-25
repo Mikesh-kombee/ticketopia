@@ -1,142 +1,91 @@
-# Mock Authentication Flow (Web)
+# 🔧 App Refactor Prompt – Dashboard, Routes, Reports, Alerts & GeoFence (Surat-based)
 
-Create a React-based mock authentication system that includes:
+## 🧩 Context
 
-1. **Login Page**:
-   - Email and password fields using React Hook Form
-   - Form validation using Zod
-   - Hardcoded valid credentials or call to a mock API
-   - "Remember me" checkbox (optional)
-   - On success: store user object in `localStorage` and redirect to `/dashboard`
-   - On failure: show error message
+You're working on a field service tracking app tailored to Indian engineers in and around **Surat, Gujarat**. The app uses Firebase as its backend and integrates geolocation, route playback, expense management, safety alerts, and admin controls.
 
-2. **Auth Context**:
-   - Implement `useAuth()` hook to manage:
-     - `user`, `login()`, `logout()`, `isAuthenticated`
-   - Store session in `localStorage` and hydrate on page load
+---
 
-3. **Protected Routes**:
-   - Create a `PrivateRoute` component or wrapper
-   - Redirect unauthenticated users to `/login`
-   - Show a loading spinner while checking auth state
+## 1. 🧱 Dashboard Enhancement
 
-4. **Logout Functionality**:
-   - Clear session from `localStorage`
-   - Redirect to `/login`
+**Current Problem**: Dashboard is too basic and lacks depth.
 
+**Refactor Goal**:
 
-# Home Dashboard Module
+- Replace current dashboard layout with **rich tables** showing:
+  - ✅ Engineer Attendance Summary
+  - 🚗 Distance Travelled (per user/date)
+  - 💸 Approved/Rejected Expenses with status
+  - 📍 Geofence Entry/Exit logs
+  - ⚠️ Recent Safety Alerts (table view)
 
-Design a `DashboardHome` React component that:
-- Renders as the landing page of the web app
-- Displays five tables (or card-tables) summarizing:
-  1. Active engineers (ID, Name, Status)
-  2. Open tickets (Ticket ID, Customer, Status, Priority)
-  3. Recent route logs (Engineer, Date, Distance)
-  4. Unread alerts (Alert ID, Type, Engineer, Timestamp)
-  5. Today’s attendance (Engineer, Check-in Time, Status)
-- Fetches data from corresponding API endpoints
-- Allows sorting columns and clicking rows to navigate to module pages (`/live-map`, `/tickets`, `/routes`, `/alerts`, `/attendance`)
-- Uses React Router for navigation
-- Adapts layout responsively across browser widths
-- Includes a top nav or sidebar with links to each module
+**Use Firebase Realtime/Firestore data** as the source.
+Ensure filters and sorting options for each table (e.g., by date, user, status).
 
+---
 
-# Call-to-Ticket Conversion (Web)
+## 2. 🛰️ Route Playback Enhancements
 
-Create a React component `TicketForm` that:
-- Uses Geolocation API to fetch current coordinates
-- Auto-fills address field with reverse-geocoded address (Google Maps Geocoder)
-- Implements Places Autocomplete for manual edits
-- Includes fields: Customer Name, Issue Type dropdown, Notes textarea, Photo upload placeholder
-- Provides a dropdown of available engineers, sorted by proximity with ETA badges
-- Supports initiating ticket creation via incoming call event (simulate this)
-- Validates inputs using React Hook Form and Zod
-- On submit, posts to `/api/tickets` and shows a modal with “Create Another Ticket” / “Go to Dashboard” options
-- Renders a side `TicketHistoryPanel` showing the last 5 tickets with status and timestamps, refreshable via a button
-- Stores all ticket data locally and syncs when online
+**Current Problem**: Playback only shows past routes.
 
-# Route History Playback (Web)
+**Refactor Goal**:
 
-Build a React page `RoutePlayback` that:
-- Renders a map via Google Maps JS API
-- Allows selecting an engineer (dropdown) and date (datepicker)
-- Fetches route data from `/api/routes?engineerId=&date=` and caches in IndexedDB
-- Draws an animated polyline with a moving marker along the path
-- Applies a speed heatmap: green for normal, red for idle
-- Marks stops (>5min) with numbered markers
-- Includes playback controls: Play/Pause, Speed toggle (1x/2x/4x), Replay
-- Shows a summary card: total distance (km) and duration (hh:mm)
-- Automatically centers and adjusts bounds to fit the route on all screen sizes
+- Add **engineer's current live location marker** on the map
+- Show current speed, status (Moving/Idle), and last synced timestamp
+- Optionally, display route heatmaps (distance/time-based)
 
-# Behavioral Alerts Engine (Web)
+**Use Firebase live location updates** for current position.
 
-Design a React component `AlertsDashboard` that:
-- Connects to an alert stream API (WebSocket/SSE)
-- Renders cards for each alert with color-coded borders (red, orange, blue)
-- Shows timestamp, alert type, engineer name, and location snippet
-- Supports filtering by type and engineer
-- Allows expanding a card to reveal a mini Google Map with the route trace
-- Provides bulk dismiss and mark-reviewed actions
-- Includes a toggle for push/email notifications per alert
-- Displays a live alert counter badge at the top
+---
 
-# GeoFence-Based Attendance (Web)
+## 3. 📊 Reports Page Update
 
-Implement a React component `GeoFenceCheckIn` that:
-- Uses Geolocation API to track the user’s position continuously
-- Fetches or sets geofence dynamically, as a circular area with a configurable radius in kilometers
-- Performs geofence checks using distance-to-center logic
-- Renders a slide-to-check-in button (disabled outside zone), with a tooltip when disabled
-- On successful check-in, logs the event, shows a shift summary (check-in time, site name)
-- Automatically checks out when the user exits the geofence, updating the summary
-- Persists logs in IndexedDB and syncs to `/api/attendance` when back online
-- Provides a UI to search and display nearby engineers within the configured radius
-- Stores all client-side actions related to attendance and selection locally and syncs with backend
+**Current Problem**: Page only shows Travel & Expense Reports.
 
-# Layout & Responsiveness (Web)
+**Refactor Goal**:
 
-Design and generate a global `AppLayout` component in React that:
-- Wraps all pages with a header and footer
+- **Remove the existing Travel & Expense section**
+- Replace with:
+  - 🚀 Engineer performance tables (distance, safety, time-in/out)
+  - ⏱️ Monthly Hours Worked (incl. night shifts)
+  - 🧾 All entries from the new dashboard’s table views
+- Reports should be **exportable** (CSV, PDF)
 
-**Header Requirements**:
-- Left: Company logo
-- Center/Right: Navigation links [Dashboard, Map, Tickets, Reports, Alerts, My Day]
-- Far right: User avatar dropdown with profile and logout options
-- Collapses links into a hamburger menu on screens <768px
-- Sticky behavior on scroll
+**Data Source**: Firebase Firestore or Analytics layer.
 
-**Footer Requirements**:
-- Centered: © 2025 YourCompany Name. All rights reserved.
-- Links: Privacy Policy, Terms of Service
+---
 
-**Responsiveness**:
-- Mobile-first design with fluid grid layout
-- Use CSS Flexbox or Tailwind utility classes for spacing
-- Ensure header and footer adapt to all screen sizes
+## 4. 🚨 Alerts Page Refactor
 
-Generate the React JSX and Tailwind CSS classes needed for this layout.
+**Current Problem**: Too many maps = cluttered UI
 
-# Travel Expense Management Flow (Web)
+**Refactor Goal**:
 
-## Web (Admin Dashboard)
+- Display **one centralized map**
+- Left Sidebar should:
+  - List alerts with filters (e.g., type, engineer, date)
+  - On selection, center map to location of alert
+  - Highlight alert region with marker/popup
+- Add Alert detail panel below or in modal
 
-Create a responsive admin dashboard that:
-- Displays a table of all expense submissions with columns:
-  - User Name, Submission Date, Distance (km), Toll (₹), Vehicle Type, Total Cost, Status
-- Admin actions:
-  - Approve / Reject buttons
-  - Filter by date, user, or status
-  - View notes if available
-- Calculate total cost using a configurable per-km rate
+**Alert Types**: Over-speed, Geofence breach, Night riding
 
-## Admin Cost Settings Form
+---
 
-Create a form for Admin to define reimbursement rates:
-- Select User
-- Vehicle Type
-- Cost per KM (₹)
-- Store in mock DB or memory
-- Auto-apply this rate to new submissions
+## 5. 📍 GeoFence Management Page
 
-Ensure all views are responsive, mobile-friendly, and styled consistently.
+**New Page Requirements**:
+
+- Path: `/admin/geofences`
+- Add new geofence with:
+  - Label (e.g., "Surat HQ", "Bardoli Plant")
+  - Lat/Lng by clicking on map
+  - Custom Radius input (in meters)
+  - Multiple geofences allowed
+
+**UI**:
+
+- Map-centered interface
+- Sidebar with list of all geofences (edit/delete buttons)
+- Firebase backend: Store under `/geofences`
+

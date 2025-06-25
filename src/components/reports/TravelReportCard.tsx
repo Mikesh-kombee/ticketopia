@@ -124,7 +124,7 @@ export function TravelReportCard({
           <span className="font-medium">Cost:</span>&nbsp;
           {report.cost.toLocaleString(undefined, {
             style: "currency",
-            currency: report.currency || "USD",
+            currency: report.currency || "INR",
           })}
         </div>
         {report.notes && (

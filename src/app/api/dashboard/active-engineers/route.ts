@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
-import type { ActiveEngineerSummary } from "@/lib/types";
-// import { engineerStatuses } from "@/lib/types"; // No longer needed
-import db from "@/lib/db.json"; // Import db.json
-
-// const mockEngineers: ActiveEngineerSummary[] = [ ... ]; // Removed
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
 
 export async function GET() {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  try {
+    const engineersRef = collection(db, "engineers");
+    const q = query(engineersRef, where("status", "==", "active"));
+    const querySnapshot = await getDocs(q);
 
-  // const updatedEngineers = mockEngineers.map( ... ); // Removed dynamic update logic
+    const activeEngineers = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-  // Return data from db.json
-  return NextResponse.json(db.activeEngineers as ActiveEngineerSummary[]);
+    return NextResponse.json({ activeEngineers });
+  } catch (error) {
+    console.error("Error fetching active engineers:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch active engineers" },
+      { status: 500 }
+    );
+  }
 }

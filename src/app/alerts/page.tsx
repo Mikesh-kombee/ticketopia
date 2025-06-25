@@ -1,4 +1,4 @@
-import { AlertsDashboard } from "@/components/alerts-dashboard";
+import AlertsDashboard from "@/components/alerts-dashboard";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

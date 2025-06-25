@@ -1,6 +1,8 @@
-import { ExpenseList } from "@/components/expenses/ExpenseList";
+import  ExpenseList from "@/components/expenses/ExpenseList";
+import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Expenses | Ticketopia",
@@ -22,6 +24,9 @@ export default function ExpensesPage() {
             Manage and track travel expense submissions
           </p>
         </div>
+        <Link href="/expenses/settings">
+          <Button>Settings</Button>
+        </Link>
       </div>
       <ExpenseList />
     </div>
